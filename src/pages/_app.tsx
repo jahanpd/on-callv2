@@ -1,6 +1,6 @@
-import { type AppType } from "next/app";
+import type { AppProps } from "next/app";
 import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'
-import { SessionContextProvider } from '@supabase/auth-helpers-react'
+import { SessionContextProvider, type Session } from '@supabase/auth-helpers-react'
 import { useState } from 'react'
 import AppContext from "../AppContext";
 

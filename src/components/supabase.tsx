@@ -1,7 +1,6 @@
 import { type NextPage } from "next";
 import { Auth, ThemeSupa } from '@supabase/auth-ui-react';
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
-import { useEffect, useState } from 'react';
 
 const AuthPage: NextPage = () => {
   const supabaseClient = useSupabaseClient();
@@ -22,7 +21,7 @@ const AuthPage: NextPage = () => {
     return (
         <button
             className = "bg-slate-100 rounded-lg p-5 hover:bg-sky-200"
-            onClick={() => supabaseClient.auth.signOut()}>Sign out</button>
+            onClick={void (async () => {await supabaseClient.auth.signOut();} ) }>Sign out</button>
         )
   }
 }

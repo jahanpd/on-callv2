@@ -1,16 +1,14 @@
-import { type NextPage } from "next";
+import type { GetServerSideProps } from 'next';
 import Link from "next/link";
-import { useRouter } from 'next/router';
 import Header from '../components/head';
 import { useUser } from '@supabase/auth-helpers-react';
 import { Auth, ThemeSupa } from '@supabase/auth-ui-react';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
-import AuthPage from '../components/supabase';
 import NavBar from '../components/navbar';
 
-export async function getServerSideProps(context) {
+export const getServerSideProps: GetServerSideProps = async (context) => {
     const supabase = createServerSupabaseClient(context);
     const {
         data: { session },
@@ -21,7 +19,7 @@ export async function getServerSideProps(context) {
             props: {
             }
         }
-    };
+    }
     return {
       redirect: {
           destination: '/home',
@@ -32,7 +30,7 @@ export async function getServerSideProps(context) {
 
 
 
-const Authenticate: NextPage = ( {} ) => {
+const Authenticate = ( {} ) => {
     const supabase = useSupabaseClient();
     const user = useUser();
 
@@ -60,7 +58,7 @@ const Authenticate: NextPage = ( {} ) => {
                             className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
                             href="home"
                         >
-                            <h3 className="text-2xl font-bold text-center">Welcome {user.email.split("@")[0]}</h3>
+                            <h3 className="text-2xl font-bold text-center">Welcome {user.email ? user.email.split("@")[0] : ""}</h3>
                             <div className="text-lg text-center">
                                 Get organised now.
                             </div>

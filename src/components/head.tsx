@@ -1,8 +1,11 @@
-import { type NextPage } from "next";
 import Head from "next/head";
 
+type Props = {
+    title: string
+    description: string
+}
 
-const Header: NextPage = ({ title, description }) => {
+const Header = ({ title, description }: Props) => {
   return (
       <Head>
           <title>{ title }</title>

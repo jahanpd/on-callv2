@@ -1,17 +1,5 @@
-import Dexie, { Table } from 'dexie';
-
-
-// better pattern than enum
-const Status = {
-    Pending: 'Pending',
-    Seen: 'Seen',
-    Completed:'Completed',
-    Transfer: 'Transfer',
-    Other: 'Other'
-} as const;
-
-type TypeStatus = typeof Status;
-export type Status = Status[keyof TypeStatus];
+import Dexie, { type Table } from 'dexie';
+import type { Status } from './types';
 
 // times are milliseconds since Jan 1 1970
 export interface Card {
@@ -31,8 +19,7 @@ export interface Card {
 // this records the timestamp of the last sync between this device and supabase
 // if last update is > last sync then it should sync data with supabase
 export interface State {
-    id?: number;
-    uid: string,
+    id?: string;
     device?: string;
     lastSync?: number;
     seedPhrase?: string;

@@ -1,14 +1,21 @@
-import { type NextPage } from "next";
 import { useContext } from "react";
 import AppContext from "../AppContext";
+import type { SetStateAction, Dispatch } from "react";
 
-const Alert: NextPage = ( { alertcontent, alerts, setAlerts, force } ) => {
+type Props = {
+    alertcontent: string
+    alerts: Array<string>
+    setAlerts: Dispatch<SetStateAction<Array<string>>>
+    force: Dispatch<SetStateAction<null>>
+}
+
+const Alert = ( { alertcontent, alerts, setAlerts, force } : Props ) => {
     const value = useContext(AppContext);
 
     function removeAlert(alertcontent: string){
         setAlerts(alerts.filter((a) => a !== alertcontent));
         console.log("post delete", alerts)
-        force()
+        force(null)
     }
 
     console.log("in alert", alertcontent)

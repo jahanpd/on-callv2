@@ -1,7 +1,7 @@
-import { type NextPage } from "next";
-import { useRouter } from 'next/router';
+import type { MouseEventHandler, ChangeEventHandler } from "react";
+import type { GetServerSidePropsContext, PreviewData, NextApiRequest, NextApiResponse } from "next";
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import { useUser } from '@supabase/auth-helpers-react';
+import type { User, Session } from '@supabase/auth-helpers-react';
 import Header from '../components/head';
 import NavBar from '../components/navbar';
 import Alert from '../components/alert';
@@ -9,11 +9,10 @@ import AppContext from "../AppContext";
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../database.config";
-import { api } from "../utils/api";
 
 import { useState, useContext, useCallback } from 'react';
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context: GetServerSidePropsContext<any, PreviewData> | { req: NextApiRequest; res: NextApiResponse<any>; }) {
     const supabase = createServerSupabaseClient(context);
     const {
         data: { session },
@@ -34,14 +33,19 @@ export async function getServerSideProps(context) {
     }
 }
 
-const HomePage: NextPage = ({ initialSession, user }) => {
+type Props = {
+    initialSession: Session,
+    user: User
+}
+
+const HomePage = ({ initialSession, user }: Props) => {
     const value = useContext(AppContext);
-    const alerts = value.state.alerts;
-    const setAlerts = value.setAlerts;
+    const alerts = value ? value.state.alerts : [];
+    const setAlerts = value ? value.setAlerts : () => {[]};
 
     // this is a hacky solution to force refresh when alerts dismissed
     const [, updateState] = useState();
-    const forceUpdate = useCallback(() => updateState({}), []);
+    const forceUpdate = useCallback(() => updateState(undefined), []);
 
     console.log(alerts);
 
@@ -70,32 +74,32 @@ const HomePage: NextPage = ({ initialSession, user }) => {
     }
     // SET STATE HANDLERS
 
-    function handleSeedEdit(e) {
-        console.log(e.target.innerText)
-        seedPhraseEditTemp = e.target.innerText
+    const handleSeedEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
+        seedPhraseEditTemp = e.target.value
     };
 
-    function handleNumberFocus(e) {
-        console.log("focusout", e)
+    const handleNumberFocus: ChangeEventHandler<HTMLInputElement> = (e) => {
+        console.log("focusout", e.target.value)
     }
 
-    async function handleNumberChange(e) {
-        console.log("focusout", e)
-        const out = await db.state.put({lookback: e.target.value, id: user.id});
-        setLookback(e.target.value);
+    const handleNumberChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+        console.log("focusout", e.target.value)
+        void (async () => await db.state.put({lookback: e.target.value, id: user.id}))();
+        setLookback(parseFloat(e.target.value));
         lookbackTemp = e.target.value;
     }
 
-    async function handleSeedSave(e) {
+    const handleSeedSave: MouseEventHandler<HTMLButtonElement> = () => {
         console.log("handle save", seedPhraseEditTemp)
-        const out = await db.state.put({seedPhrase: seedPhraseEditTemp, id: user.id});
+        void (async () => await db.state.put({seedPhrase: seedPhraseEditTemp, id: user.id}))();
         setEditing(!editing);
         // TODO update supabase records with new encryption
         // TODO update seed phrase hash
     };
 
     function editing_toggle() {
-        setSeedPhraseEdit(userState[0]?.seedPhrase)
+        const phrase = userState ? userState[0]?.seedPhrase : ""
+        setSeedPhraseEdit(phrase ? phrase : "")
         setEditing(!editing);
         /* setSeedPhraseEdit(userState[0]?.seedPhrase) */
     }
@@ -103,7 +107,7 @@ const HomePage: NextPage = ({ initialSession, user }) => {
     // process alerts
     const test = ["test"];
     const alerts_render = alerts.map(
-        (a: string) => {return (<Alert alertcontent={a} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
+        (a: string, idx) => {return (<Alert key={idx} alertcontent={a} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
     )
     console.log(alerts_render)
 
@@ -131,7 +135,7 @@ const HomePage: NextPage = ({ initialSession, user }) => {
                       <div className="flex flex-col">
                           <button
                               className="p-4 bg-red-300/40 border-1 border-red-400"
-                              onClick={(e) => handleSeedSave(e)}
+                              onClick={handleSeedSave}
                           >save</button>
                           <button
                               className="p-4 bg-green-300/40 border-1 border-red-400"

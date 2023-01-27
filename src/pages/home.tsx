@@ -1,19 +1,18 @@
-import { type NextPage } from "next";
-import { useRouter } from 'next/router';
+import type { MouseEventHandler, ChangeEventHandler } from "react";
+import type { GetServerSideProps } from 'next';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import { useUser } from '@supabase/auth-helpers-react';
+import type { User, Session } from '@supabase/auth-helpers-react';
 import Header from '../components/head';
 import NavBar from '../components/navbar';
 import Card from '../components/card';
 import Select from 'react-select'
+import type { SelectInstance, MultiValue } from 'react-select'
 
-import { Fragment, useState, useContext, useCallback } from 'react';
+import { useState } from 'react';
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../database.config";
 import { v4 as uuidv4 } from 'uuid';
-
-import { api } from "../utils/api";
 
 import {
     Accordion,
@@ -28,7 +27,7 @@ import {
     Button,
 } from "@material-tailwind/react";
 
-export async function getServerSideProps(context) {
+export const getServerSideProps: GetServerSideProps = async (context) => {
     const supabase = createServerSupabaseClient(context);
     const {
         data: { session },
@@ -57,12 +56,18 @@ const Status = {
     Other: 'Other',
 } as const;
 
-const HomePage: NextPage = ({ initialSession, user }) => {
+
+type Props = {
+    initialSession: Session,
+    user: User
+}
+
+const HomePage = ({ initialSession, user }: Props) => {
 
     // GET PREVIOUS VALUES FROM INDEXEDDB STORE
     const userState = useLiveQuery(
         async () => db.state
-        .where("id")
+                     .where("id")
         .equals(user.id)
         .toArray()
     );
@@ -75,7 +80,8 @@ const HomePage: NextPage = ({ initialSession, user }) => {
 
     // process options for status filter selection
     const options = []
-    for (const k in Status) {
+    let k: keyof typeof Status;
+    for (k in Status) {
         options.push({
             value: Status[k],
             label: Status[k]
@@ -83,12 +89,12 @@ const HomePage: NextPage = ({ initialSession, user }) => {
     }
 
     // process options for card search
-    const cardOptions = [{label: "12345 test name", value: "slkdf1231"}]
+    const cardOptions = []
     if (userCards) {
-        for (const k in userCards) {
+        for (const k of userCards) {
             cardOptions.push({
-                value: userCards[k]?.cardId,
-                label: userCards[k]?.urn + " " + userCards[k]?.name
+                value: k?.cardId,
+                label: `${k.urn ? k.urn : ""} ${k.name ? k.name : ""}`
             })
         }
     }
@@ -96,8 +102,8 @@ const HomePage: NextPage = ({ initialSession, user }) => {
     // DEFINE STATE VARIABLES HERE
     const [filter, setFilter] = useState({
         status: options.filter(
-            (e) => e.value == Status.Pending |
-                e.value == Status.Seen |
+            (e) => e.value == Status.Pending ||
+                e.value == Status.Seen ||
                 e.value == Status.Transfer
             ),
         from: new Date(Date.now() - (1*24*60*60*1000)),
@@ -112,28 +118,17 @@ const HomePage: NextPage = ({ initialSession, user }) => {
     if (!userCards) return null
 
     // handlers for time range change
-    function handleFromChange(e) {
-        console.log("from change", e)
+    const handleFromChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+        console.log("from change", e.target.value)
         // TODO change state of filter
     }
 
-    function handleToChange(e) {
-        console.log("to change", e)
+    const handleToChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+        console.log("to change", e.target.value)
         // TODO change state of filter
     }
 
-    function handleStatusChange(e) {
-        console.log("status change", e)
-        // TODO change state of filter
-    }
-
-    function handleSearchChange(e) {
-        console.log("search change", e)
-        // TODO change state of filter
-    }
-
-    //
-    const handleFilterOpen = (value) => {
+    const handleFilterOpen = (value: number) => {
     console.log("open", value)
     setFilterOpen(filterOpen === value ? 0 : value);
     };
@@ -153,7 +148,7 @@ const HomePage: NextPage = ({ initialSession, user }) => {
             notes: [],
         }
         console.log("adding", newCard)
-        db.cards.add(newCard);
+        void (async () => await db.cards.add(newCard))();
     }
 
     // handler to trigger filter
@@ -169,8 +164,8 @@ const HomePage: NextPage = ({ initialSession, user }) => {
 
     // filter and sort cards
     const cardsDisplay = userCards
-        .map((c) => {
-            return (<Card card={c} cards={cards} setCards={setCards} filter={filter} setFilter={setFilter}/>)
+        .map((c, i) => {
+            return (<Card key={i} card={c} cards={cards} setCards={setCards} />)
             /* return (<p>{c.uid}</p>) */
         })
     console.log("visualise usercards", userCards)
@@ -193,7 +188,7 @@ const HomePage: NextPage = ({ initialSession, user }) => {
                         <AccordionBody>
                             <Select
                                 className="basic-multi-select"
-                                onChange={handleStatusChange}
+                                onChange={selected => { console.log("status select", selected) }}
                                 isMulti
                                 isClearable={false}
                                 defaultValue={filter.status}
@@ -201,7 +196,7 @@ const HomePage: NextPage = ({ initialSession, user }) => {
                             />
                             <Select
                                 className="basic-multi-select pt-2"
-                                onChange={handleSearchChange}
+                                onChange={searched => { console.log("search select", searched) }}
                                 placeholder="Search URN or name"
                                 options={cardOptions}
                                 isClearable={true}

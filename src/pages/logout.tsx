@@ -2,12 +2,12 @@ import { type NextPage } from "next";
 import Link from "next/link";
 import Header from '../components/head';
 import NavBar from '../components/navbar';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import { useRouter } from 'next/router';
+import { useSupabaseClient, type SupabaseClient } from '@supabase/auth-helpers-react';
+import { useRouter, type NextRouter } from 'next/router';
 
-const signOut = (supabase, router) => {
-    supabase.auth.signOut();
-    router.push("/landing");
+const signOut = (supabase: SupabaseClient, router: NextRouter) => {
+    void (async () => await supabase.auth.signOut())();
+    void (async () => await router.push("/landing"))();
 }
 
 const LandingPage: NextPage = () => {

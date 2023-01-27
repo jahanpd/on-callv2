@@ -1,13 +1,8 @@
-import { type NextPage } from "next";
 import Link from "next/link";
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import { useRouter } from 'next/router';
 import { useUser } from '@supabase/auth-helpers-react';
 
 
-const NavBar: NextPage = () => {
-    const supabaseClient = useSupabaseClient();
-    const router = useRouter();
+const NavBar = () => {
     const user = useUser();
     return (
         <nav
