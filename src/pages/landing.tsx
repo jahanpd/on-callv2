@@ -5,6 +5,10 @@ import NavBar from '../components/navbar';
 
 
 const LandingPage: NextPage = () => {
+    const navList = (
+    <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6">
+    </ul>
+    )
     return (
 
         <>
@@ -28,7 +32,7 @@ const LandingPage: NextPage = () => {
                     </div>
                 </div>
             </main>
-            <NavBar />
+            <NavBar navList={navList}/>
         </>
     );
 }

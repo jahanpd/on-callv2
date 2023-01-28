@@ -39,6 +39,10 @@ const Authenticate = ( {} ) => {
         // TODO get query for seedHash and update state
         // TODO get query for user agreement and update state
     }
+    const navList = (
+    <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6">
+    </ul>
+    )
 
     return (
             <>
@@ -66,7 +70,7 @@ const Authenticate = ( {} ) => {
                     </div>
                 }
             </main>
-            <NavBar />
+            <NavBar navList={navList}/>
 
             </>
     );
