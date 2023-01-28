@@ -10,7 +10,7 @@ const LandingPage: NextPage = () => {
         <>
             <Header title="On Call" description="A tool for doctors who are on call and taking referrals"/>
 
-            <main className="flex h-[calc(100vh-64px)] flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
+            <main className="flex h-[calc(100vh)] flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
                 <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
                     <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
                         On <span className="text-[hsl(280,100%,70%)]">Call</span>

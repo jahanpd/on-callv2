@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html>
       <Head />
-      <body className="min-h-screen pb-safe">
+      <body className="min-h-screen overflow-auto">
         <Main />
         <NextScript />
       </body>

@@ -44,7 +44,7 @@ const Authenticate = ( {} ) => {
             <>
             <Header title="On Call" description="A tool for doctors who are on call and taking referrals"/>
 
-            <main className="flex h-[calc(100vh-64px)] flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
+            <main className="flex h-[calc(100vh)] flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
                 {!user ?
                     <Auth
                     redirectTo="http://localhost:3000/home"

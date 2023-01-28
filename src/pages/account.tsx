@@ -115,7 +115,7 @@ const HomePage = ({ initialSession, user }: Props) => {
     return (
         <>
             <Header title="On Call" description="A tool for doctors who are on call and taking referrals"/>
-            <main className="flex h-[calc(100vh-64px)] flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] overflow-auto">
+            <main className="flex h-[calc(100vh)] flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] overflow-auto">
                 <h1 className="text-[2.2rem] font-extrabold tracking-tight text-white sm:text-[3rem] p-4">
                     Account <span className="text-[hsl(280,100%,70%)]">Settings</span>
                 </h1>

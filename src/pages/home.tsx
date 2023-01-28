@@ -170,10 +170,35 @@ const HomePage = ({ initialSession, user }: Props) => {
         })
     console.log("visualise usercards", userCards)
 
+    // generate navlist for this page
+    const navList = (
+    <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6">
+        <li>
+            <Menu placement="top">
+                <MenuHandler>
+                    <Button className="bg-[hsl(280,100%,70%)]">actions</Button>
+                </MenuHandler>
+                <MenuList className="bg-white">
+                    <MenuItem className="text-center">
+                        Export Current to PDF (coming soon)
+                    </MenuItem>
+                    <MenuItem className="text-center">
+                        Export Current to CSV (coming soon)
+                    </MenuItem>
+                </MenuList>
+            </Menu>
+        </li>
+        <li>
+            <Button variant="gradient" size="sm" className="mt-2 sm:mb-0 p-3 w-[100px]" color="white">
+                Add Card
+            </Button>
+        </li>
+    </ul>)
+
     return (
         <>
             <Header title="On Call" description="A tool for doctors who are on call and taking referrals"/>
-            <main className="flex h-[calc(100vh-64px)] items-center flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] text-[0.7rem] sm:text-[0.9rem]">
+            <main className="flex h-[calc(100vh)] items-center flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] text-[0.7rem] sm:text-[0.9rem] overflow-auto">
                 <div className = "flex flex-col sm:px-4 px-2 max-w-[500px] overflow-auto h-full">
                     <div className="flex flex-row w-full h-max">
                     </div>
@@ -229,26 +254,12 @@ const HomePage = ({ initialSession, user }: Props) => {
                             </div>
                         </AccordionBody>
                     </Accordion>
+                    <div className="pb-[400px]">
                     {cardsDisplay}
-                </div>
-                <div className="p-2">
-                    <Menu placement="top">
-                        <MenuHandler>
-                            <Button className="bg-[hsl(280,100%,70%)]">action</Button>
-                        </MenuHandler>
-                        <MenuList className="bg-white/20">
-                            <MenuItem className="text-white text-center">
-                                Export PDF
-                            </MenuItem>
-                            <MenuItem className="text-white text-center">
-                                Add Card
-                            </MenuItem>
-                        </MenuList>
-
-                    </Menu>
+                    </div>
                 </div>
             </main>
-            <NavBar />
+            <NavBar navList={navList} />
         </>
     )
 }
