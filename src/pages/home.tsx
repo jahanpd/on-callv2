@@ -189,7 +189,7 @@ const HomePage = ({ initialSession, user }: Props) => {
             </Menu>
         </li>
         <li>
-            <Button variant="gradient" size="sm" className="mt-2 sm:mb-0 p-3 w-[100px]" color="white">
+            <Button variant="gradient" size="sm" className="mt-2 sm:mt-0 p-3 w-[100px]" color="white">
                 Add Card
             </Button>
         </li>

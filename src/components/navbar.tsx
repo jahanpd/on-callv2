@@ -8,6 +8,7 @@ import {
     Button,
     IconButton,
 } from "@material-tailwind/react";
+import { useRouter } from 'next/router';
 
 const navList = (
     <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6">
@@ -21,8 +22,7 @@ type Props = {
 const NavBar = ( {navList}: Props ) => {
     const user = useUser();
     const [openNav, setOpenNav] = useState(false);
-
-
+    const router = useRouter();
 
     return (
         <Navbar className="!bg-white/10 mx-auto sm:max-w-screen-xl w-[80%] lg:px-8 lg:py-1 fixed top-[90%] sm:top-[93%] left-1/2 transform -translate-x-1/2 -translate-y-[95%]">
@@ -46,20 +46,37 @@ const NavBar = ( {navList}: Props ) => {
 
                 <div className="hidden lg:block">{navList}</div>
 
-                <Button variant="gradient" size="sm" className="hidden lg:inline-block" color="white">
-                    {user ?
-                     <Link
-                         className = ""
-                         href="logout"
-                     >logout
-                     </Link>
-                    :
-                     <Link
-                         className = ""
-                         href="auth">login
-                     </Link>
-                    }
-                </Button>
+                {user ?
+                 <Button variant="gradient" size="sm" className="hidden lg:inline-block w-[100px] p-3" color="white" onClick={
+                 () => {void router.push('/account')}
+                 }>
+                         ⚙️
+                     </Button>
+                : ""
+                }
+                {user ?
+                     <Button variant="gradient" size="sm" className="hidden lg:inline-block !w-[100px] p-3" color="white" onClick={
+                 () => {void router.push('/home')}
+                     }>
+                         list
+                     </Button>
+                : ""
+                }
+
+                {user ?
+                     <Button variant="gradient" size="sm" className="hidden lg:inline-block" color="white" onClick={
+                 () => {void router.push('/logout')}
+                     }
+                     >
+                         logout
+                     </Button>
+                :
+                     <Button variant="gradient" size="sm" className="hidden lg:inline-block" color="white" onClick={
+                 () => {void router.push('/auth')}
+                     }>
+                         login
+                     </Button>
+                }
 
                 <IconButton
                     variant="text"
@@ -118,21 +135,19 @@ const NavBar = ( {navList}: Props ) => {
                         </div>
                     </Button>
                     {user ?
-                    <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white">
-                        <Link
-                            className = "text-[1rem]"
-                            href="account">⚙️
-                        </Link>
-                    </Button>
+                     <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white" onClick={
+                    () => {void router.push('/account')}
+                     }>
+                     ⚙️
+                     </Button>
                     : ""
                     }
                     {user ?
-                    <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white">
-                        <Link
-                            className = ""
-                            href="home">list
-                        </Link>
-                    </Button>
+                     <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white" onClick={
+                    () => {void router.push('/home')}
+                     }>
+                     list
+                     </Button>
                     : ""
                     }
 
