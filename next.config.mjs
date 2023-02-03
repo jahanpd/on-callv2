@@ -6,6 +6,9 @@
 !process.env.SKIP_ENV_VALIDATION && (await import("./src/env/server.mjs"));
 
 /** @type {import("next").NextConfig} */
+import withPWA from 'next-pwa';
+
+
 const config = {
   reactStrictMode: true,
   /* If trying out the experimental appDir, comment the i18n config out

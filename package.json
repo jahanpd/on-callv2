@@ -25,6 +25,7 @@
     "dexie": "^3.2.2",
     "dexie-react-hooks": "^1.1.1",
     "next": "13.1.2",
+    "next-pwa": "^5.6.0",
     "react": "18.2.0",
     "react-date-picker": "^9.2.0",
     "react-dom": "18.2.0",
@@ -35,6 +36,7 @@
     "zod": "^3.20.2"
   },
   "devDependencies": {
+    "@types/next-pwa": "^5.6.2",
     "@types/node": "^18.11.18",
     "@types/prettier": "^2.7.2",
     "@types/react": "^18.0.26",
