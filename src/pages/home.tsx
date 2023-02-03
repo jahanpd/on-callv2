@@ -1,4 +1,6 @@
-import type { MouseEventHandler, ChangeEventHandler } from "react";
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import type { Database } from '../utils/supabaseTypes';
+import type { MouseEventHandler, ChangeEventHandler} from "react";
 import type { GetServerSideProps } from 'next';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import type { User, Session } from '@supabase/auth-helpers-react';
@@ -7,13 +9,18 @@ import NavBar from '../components/navbar';
 import Card from '../components/card';
 import Select from 'react-select'
 import type { SelectInstance, MultiValue } from 'react-select'
+import { type Filter as FilterType, SyncError } from '../types'
+import { Alerts } from '../types'
 
-import { useState } from 'react';
+import AppContext from "../AppContext";
+import { useState, useContext, useCallback, useEffect } from 'react';
+import type { SetStateAction, Dispatch } from "react";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../database.config";
+import { db, type Card as CardType } from "../database.config";
 import { v4 as uuidv4 } from 'uuid';
 
+import Alert from '../components/alert';
 import {
     Accordion,
     AccordionHeader,
@@ -26,6 +33,8 @@ import {
     MenuItem,
     Button,
 } from "@material-tailwind/react";
+import { deleteCard } from "../supabase-helper"
+import { checkDataSync } from "../checks-and-balance";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const supabase = createServerSupabaseClient(context);
@@ -48,6 +57,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 }
 
+// helper function for offsetting time
+export function getOffsetTimeString(date: Date) {
+    const offset = new Date(date.getTime() - date.getTimezoneOffset()*60*1000)
+    return offset.toISOString().substring(0,19)
+}
+
 const Status = {
     Pending: 'Pending',
     Seen: 'Seen',
@@ -55,14 +70,24 @@ const Status = {
     Transfer: 'Transfer',
     Other: 'Other',
 } as const;
-
+type StatusType = "Pending" | "Seen" | "Completed" | "Transfer" | "Other"
 
 type Props = {
     initialSession: Session,
     user: User
 }
 
+
 const HomePage = ({ initialSession, user }: Props) => {
+    const supabaseClient = useSupabaseClient<Database>();
+
+    const value = useContext(AppContext);
+    const alerts = value ? value.state.alerts : [];
+    const setAlerts = value ? value.setAlerts : () => {[]};
+
+    // this is a hacky solution to force refresh when alerts dismissed
+    const [, updateState] = useState();
+    const forceUpdate = useCallback(() => updateState(undefined), []);
 
     // GET PREVIOUS VALUES FROM INDEXEDDB STORE
     const userState = useLiveQuery(
@@ -100,48 +125,84 @@ const HomePage = ({ initialSession, user }: Props) => {
     }
 
     // DEFINE STATE VARIABLES HERE
-    const [filter, setFilter] = useState({
-        status: options.filter(
-            (e) => e.value == Status.Pending ||
-                e.value == Status.Seen ||
-                e.value == Status.Transfer
-            ),
+    const initFilter: FilterType = {
+        status: options.filter((o) => o.value == Status.Pending || o.value == Status.Transfer),
         from: new Date(Date.now() - (1*24*60*60*1000)),
         to: new Date(Date.now() + (1*24*60*60*1000)),
         urn: "",
-    });
+    }
+    const [filter, setFilter]: [FilterType, Dispatch<SetStateAction<FilterType>>] = useState(initFilter);
     const [filterOpen, setFilterOpen] = useState(0);
-    const [cards, setCards] = useState([]);
+    const cardsInit: Array<CardType> = []
+    const [cards, setCards] = useState(cardsInit);
+    const [selected, setSelected] = useState("");
 
     // return null while waiting dexie queries
     if (!userState) return null
     if (!userCards) return null
 
+    const sortFn = (a: CardType, b: CardType) => {return b.timestamp - a.timestamp;}
+    userCards.sort(sortFn);
+
+    if (filter != userState[0]?.filterLocal) {
+        userState[0]?.filterLocal ? setFilter(userState[0]?.filterLocal) : ""
+    }
+
+    // save filter to localdb
+    const storeFilterLocal = () => {
+        void (async () => await db.state.where("id").equals(user.id).modify(
+            {filter: filter}
+        ))();
+    }
+
+    const resetFilter = () => {
+        setFilter(initFilter)
+        void (async () => await db.state.where("id").equals(user.id).modify(
+            {filter: null}
+        ))();
+    }
+
     // handlers for time range change
     const handleFromChange: ChangeEventHandler<HTMLInputElement> = (e) => {
         console.log("from change", e.target.value)
-        // TODO change state of filter
+        filter.from = new Date(e.target.value)
+        setFilter(filter)
+        storeFilterLocal()
     }
 
     const handleToChange: ChangeEventHandler<HTMLInputElement> = (e) => {
         console.log("to change", e.target.value)
-        // TODO change state of filter
+        filter.to = new Date(e.target.value)
+        setFilter(filter)
+        storeFilterLocal()
+    }
+
+    const handleStatusChange = (e: Array<keyof typeof Status>) => {
+        console.log("status change", e)
+        filter.status = e.map((el) => { return {value: Status[el], label: Status[el]} })
+        setFilter(filter)
+        storeFilterLocal()
+    }
+    const handleSearchChange = (e: string | undefined) => {
+        console.log("search change", e)
+        filter.urn = e ? e : ""
+        setFilter(filter)
+        storeFilterLocal()
     }
 
     const handleFilterOpen = (value: number) => {
-    console.log("open", value)
     setFilterOpen(filterOpen === value ? 0 : value);
     };
 
     // handler to add card
     function addCard() {
-        // TODO add card to dexiedb and create editable card component
         const newCard = {
             uid: user.id,
             cardId: uuidv4(),
             name: "",
             urn: "",
             timestamp: Date.now(),
+            timestampEdit: Date.now(),
             content: "",
             summary: "",
             status: Status.Pending,
@@ -151,24 +212,80 @@ const HomePage = ({ initialSession, user }: Props) => {
         void (async () => await db.cards.add(newCard))();
     }
 
-    // handler to trigger filter
-    function filterCards() {
-        // TODO filter deck and rerender
+    function deleteSelected() {
+        if (!userCards) return
+        for (const c of userCards) {
+            if (c.cardId == selected) {
+                if (!c) return
+                void (async () => {
+                    await db.cards.where("cardId").equals(c.cardId).delete();
+                    // delete from supabase
+
+                    const msg = await deleteCard(supabaseClient, user, c.cardId)
+                    if (!msg) {
+                        alerts.push(
+                            {alert: Alerts.supabaseDeleteFail, timestamp:Date.now()}
+                        )
+                        setAlerts(alerts)
+                        forceUpdate()
+                    } else if (msg > 1) {
+                        alerts.push(
+                            {alert: Alerts.supabaseDeleteSuccess, timestamp:Date.now()}
+                        )
+                        setAlerts(alerts)
+                        forceUpdate()
+                    }
+                })();
+            }
+        }
+        console.log("card length", userCards.length)
     }
 
-    function getOffsetTimeString(date: Date) {
-        const offset = new Date(date.getTime() - date.getTimezoneOffset()*60*1000)
-        console.log("offset", offset);
-        return offset.toISOString().substring(0,19)
+    const syncWithDatabase = async () => {
+            const msg = await checkDataSync(
+                user,
+                supabaseClient,
+                db,
+            )
+            if (msg != SyncError.Passed) {
+                alerts.push(
+                    {alert: Alerts.supabaseOperation, timestamp:Date.now()}
+                )
+                setAlerts(alerts)
+                forceUpdate()
+            }
     }
 
+
+    const filterUrnName = (urn: string | undefined, name: string | undefined, filter: string | undefined) => {
+        console.log("filter", urn, name, filter)
+        if (!filter) return true
+        if (!urn && !name) return false
+        const urnFilt = urn ? filter.includes(urn) : false
+        const nameFilt = name ? filter.includes(name) : false
+        return urnFilt || nameFilt
+    }
     // filter and sort cards
     const cardsDisplay = userCards
+        .filter((c) => {
+            return (
+                filter.status.map(s => s.value.toString()).includes(c.status) &&
+                filter.from <= new Date(c.timestamp) &&
+                filter.to >= new Date(c.timestamp) &&
+                filterUrnName(c.urn, c.name, filter.urn)
+            )
+        })
         .map((c, i) => {
-            return (<Card key={i} card={c} cards={cards} setCards={setCards} />)
-            /* return (<p>{c.uid}</p>) */
+            return (
+                <Card key={i} card={c} cards={cards} setCards={setCards} selected={selected} setSelected={setSelected} force={forceUpdate}/>
+            )
         })
     console.log("visualise usercards", userCards)
+
+    // prep alert notifications
+    const alerts_render = alerts.map(
+        (a: {alert: Alerts, timestamp: number}, idx) => {return (<Alert key={idx} alertcontent={a.alert} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
+    )
 
     // generate navlist for this page
     const navList = (
@@ -179,6 +296,12 @@ const HomePage = ({ initialSession, user }: Props) => {
                     <Button className="bg-[hsl(280,100%,70%)]">actions</Button>
                 </MenuHandler>
                 <MenuList className="bg-white">
+                    <MenuItem className="text-center" onClick={deleteSelected}>
+                        Delete Selected Card
+                    </MenuItem>
+                    <MenuItem className="text-center" onClick={() => void syncWithDatabase()}>
+                        Sync with DB
+                    </MenuItem>
                     <MenuItem className="text-center">
                         Export Current to PDF (coming soon)
                     </MenuItem>
@@ -189,7 +312,7 @@ const HomePage = ({ initialSession, user }: Props) => {
             </Menu>
         </li>
         <li>
-            <Button variant="gradient" size="sm" className="mt-2 sm:mt-0 p-3 w-[100px]" color="white">
+            <Button variant="gradient" size="sm" className="mt-2 sm:mt-0 p-3 w-[100px]" color="white" onClick={addCard}>
                 Add Card
             </Button>
         </li>
@@ -198,11 +321,9 @@ const HomePage = ({ initialSession, user }: Props) => {
     return (
         <>
             <Header title="On Call" description="A tool for doctors who are on call and taking referrals"/>
-            <main className="flex h-[calc(100vh)] items-center flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] text-[0.7rem] sm:text-[0.9rem] overflow-auto">
-                <div className = "flex flex-col sm:px-4 px-2 max-w-[500px] overflow-auto h-full">
-                    <div className="flex flex-row w-full h-max">
-                    </div>
-                    <Accordion open={filterOpen === 1} className="pb-2">
+            <main className="flex h-[calc(100vh)] w-[100vw] items-center flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] text-[0.7rem] sm:text-[0.9rem] overflow-auto">
+                <div className = "flex flex-col px-4 w-full overflow-auto h-full items-center">
+                    <Accordion open={filterOpen === 1} className="pb-2 sm:max-w-screen-xl !w-[calc(100vw-20px)]">
                         <AccordionHeader onClick={() => handleFilterOpen(1)} className="!text-white !p-2">
                             <div className="flex h-full flex-row">
                                 <h1 className="flex text-[1.5rem] h-max w-full font-extrabold tracking-tight text-white py-2 pl-2 sm:text-[2rem]">
@@ -210,10 +331,10 @@ const HomePage = ({ initialSession, user }: Props) => {
                                 </h1>
                             </div>
                         </AccordionHeader>
-                        <AccordionBody>
+                        <AccordionBody className="!items-center ">
                             <Select
                                 className="basic-multi-select"
-                                onChange={selected => { console.log("status select", selected) }}
+                                onChange={(e) => { handleStatusChange(e.map(el => el.value)) } }
                                 isMulti
                                 isClearable={false}
                                 defaultValue={filter.status}
@@ -221,45 +342,60 @@ const HomePage = ({ initialSession, user }: Props) => {
                             />
                             <Select
                                 className="basic-multi-select pt-2"
-                                onChange={searched => { console.log("search select", searched) }}
+                                onChange={(e) => { handleSearchChange(e?.label) } }
                                 placeholder="Search URN or name"
                                 options={cardOptions}
                                 isClearable={true}
                             />
-                            <div className="flex max-w-[100vw - 100px] mb-4 p-1 flex-row flex-wrap sm:flex-nowrap text-white font-bold">
-                                <div className="pr-2">
-                                    <div className="flex w-max sm:pr-2">From: </div>
-                                    <div className="flex w-max font-normal">
-                                        <input
-                                            className="bg-white/10"
-                                            type="datetime-local"
-                                            name="from"
-                                            value={getOffsetTimeString(filter.from)}
-                                            onChange={handleFromChange}
-                                        />
+                            <div className="grid grid-cols-3 max-w-[100vw - 100px] mb-4 p-1 flex-row flex-wrap sm:flex-nowrap text-white font-bold items-center">
+                                <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-start sm:justify-items-center">
+                                    <div className="pr-2">
+                                        <div className="flex w-max sm:pr-2">From: </div>
+                                        <div className="flex w-max font-normal">
+                                            <input
+                                                className="bg-white/10"
+                                                type="datetime-local"
+                                                name="from"
+                                                value={getOffsetTimeString(filter.from)}
+                                                onChange={handleFromChange}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="flex w-max sm:pr-2">To: </div>
+                                        <div className="flex w-max font-normal">
+                                            <input
+                                                className="bg-white/10"
+                                                type="datetime-local"
+                                                name="to"
+                                                value={getOffsetTimeString(filter.to)}
+                                                onChange={handleToChange}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <div className="flex w-max sm:pl-4 sm:pr-2">To: </div>
-                                    <div className="flex w-max font-normal">
-                                        <input
-                                            className="bg-white/10"
-                                            type="datetime-local"
-                                            name="to"
-                                            value={getOffsetTimeString(filter.to)}
-                                            onChange={handleToChange}
-                                        />
-                                    </div>
+                                <div className="grid grid-cols-1 justify-items-end sm:justify-items-center">
+                                    <Button onClick={resetFilter}>
+                                        Reset
+                                    </Button>
                                 </div>
                             </div>
                         </AccordionBody>
                     </Accordion>
-                    <div className="pb-[400px]">
-                    {cardsDisplay}
+                    <div className="container mx-[5px] h-full w-full mt-2 items-center">
+                        <div className="grid grid-cols-1 gap-4 justify-items-center">
+                            {cardsDisplay}
+                        </div>
+                        <div className="flex flex-col w-full h-1/2 items-center"/>
                     </div>
                 </div>
             </main>
             <NavBar navList={navList} />
+            {
+                alerts.length > 0 ?
+                                <div className="fixed top-[0%] h-[100vh] w-[100vw]">{alerts_render}</div>:
+                                ""
+            }
         </>
     )
 }

@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Status } from './types';
+import type { Status, Filter } from './types';
 
 // times are milliseconds since Jan 1 1970
 export interface Card {
@@ -10,9 +10,10 @@ export interface Card {
     urn?: string;
     dob?: number;
     timestamp: number;
+    timestampEdit: number;
     content: string;
     summary?: string;
-    status?: Status;
+    status: Status;
     notes?: Array<string>;
 }
 
@@ -23,8 +24,8 @@ export interface State {
     device?: string;
     lastSync?: number;
     seedPhrase?: string;
-    lookback?: string;
-    filter?: string;
+    lookback?: number;
+    filterLocal?: Filter;
 }
 
 export class MySubClassedDexie extends Dexie {
@@ -37,7 +38,7 @@ export class MySubClassedDexie extends Dexie {
     super('database');
     this.version(2).stores({
       cards: '++id, uid, cardId, name, urn, dob, timestamp, content, summary, status', // Primary key and indexed props
-      state: '++id, uid, device, lastSync, seedPhrase, lookback, filter' // Primary key and indexed props
+      state: '++id, uid, device, lastSync, seedPhrase, lookback, filterLocal' // Primary key and indexed props
     });
   }
 }

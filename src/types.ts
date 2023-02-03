@@ -1,5 +1,5 @@
 // better pattern than enum
-const Status = {
+export const Status = {
     Pending: 'Pending',
     Seen: 'Seen',
     Completed:'Completed',
@@ -10,18 +10,51 @@ const Status = {
 export type Status = typeof Status[keyof typeof Status];
 
 
-// TODO implement card type
+const options = []
+    let k: keyof typeof Status;
+    for (k in Status) {
+        options.push({
+            value: Status[k],
+            label: Status[k]
+        })
+    }
 
-export type Card = {
-    id?: number;
-    uid: string;
-    cardId: string;
-    name?: string;
-    urn?: string;
-    dob?: number;
-    timestamp: number;
-    content: string;
-    summary?: string;
-    status?: Status;
-    notes?: Array<string>;
-}
+export type Filter = {
+     status: typeof options;
+     from: Date;
+     to: Date;
+     urn: string;
+ }
+
+export const Alerts = {
+    sync: "Data sync has failed, check internet connection",
+    supabaseOperation: "Unable to perform operation with server. Possibly no internet connection. Please sync data when internet available",
+    SaveOperation: "Card save succeeded locally but failed to sync. Possibly no internet connection. Please sync data when internet available",
+    supabaseDeleteFail: "Unable to delete card on server. Possibly no internet connection. Please try again when internet available",
+    supabaseDeleteSuccess: "Card successfully removed from server and locally. If this is unintentional consider using filter/status to remove from view instead.",
+    noSeed: "No seed hash recorded. Please input one to sync data",
+    pushedSeed: "Pushed current phrase to server. DO NOT LOSE THIS PHRASE to sync across other devices",
+    seedDiffers: "Input seed phrase on this device is different from others. Please check phrase",
+} as const;
+
+export type Alerts = typeof Alerts[keyof typeof Alerts]
+
+export const SeedError = {
+    localEmpty: "No local seed input",
+    Different: "Local input seed different to other device(s)",
+    NoSupabase: "Local input seed but no hash recorded. Push to server",
+    Passed: "Seed hash passed check",
+} as const;
+
+export type SeedError = typeof SeedError[keyof typeof SeedError]
+
+export const SyncError = {
+    noSeed: "No local seed to encrypt with",
+    noSupaState: "Userstate failed to be retrieved from supabase",
+    setError: "Error setting datat",
+    setStateError: "Error setting user state",
+    Passed: "Data sync appears successful",
+    getError: "Unable to retrieve cards from supabase"
+} as const;
+
+export type SyncError = typeof SyncError[keyof typeof SyncError]

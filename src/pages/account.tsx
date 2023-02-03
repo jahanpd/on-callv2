@@ -1,16 +1,20 @@
 import type { MouseEventHandler, ChangeEventHandler } from "react";
 import type { GetServerSidePropsContext, PreviewData, NextApiRequest, NextApiResponse } from "next";
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import type { User, Session } from '@supabase/auth-helpers-react';
+import { useSupabaseClient, type User, type Session } from '@supabase/auth-helpers-react';
+import type { Database } from '../utils/supabaseTypes';
 import Header from '../components/head';
 import NavBar from '../components/navbar';
 import Alert from '../components/alert';
 import AppContext from "../AppContext";
+import type { Alerts } from '../types';
+
+import { clientRoutine } from '../checks-and-balance';
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../database.config";
 
-import { useState, useContext, useCallback } from 'react';
+import { useState, useContext, useCallback, useEffect} from 'react';
 
 export async function getServerSideProps(context: GetServerSidePropsContext<any, PreviewData> | { req: NextApiRequest; res: NextApiResponse<any>; }) {
     const supabase = createServerSupabaseClient(context);
@@ -38,44 +42,54 @@ type Props = {
     user: User
 }
 
-const HomePage = ({ initialSession, user }: Props) => {
+const Account = ({ initialSession, user }: Props) => {
     const value = useContext(AppContext);
     const alerts = value ? value.state.alerts : [];
     const setAlerts = value ? value.setAlerts : () => {[]};
+
+    const supabase = useSupabaseClient<Database>();
 
     // this is a hacky solution to force refresh when alerts dismissed
     const [, updateState] = useState();
     const forceUpdate = useCallback(() => updateState(undefined), []);
 
-    console.log(alerts);
 
     // GET PREVIOUS VALUES FROM INDEXEDDB STORE
     const userState = useLiveQuery(
         async () => db.state
         .where("id")
         .equals(user.id)
-        .toArray()
+        .first()
     );
 
     // SET STATE VARIABLES
-    console.log(userState);
     const [editing, setEditing] = useState(false);
     const [seedPhraseEdit, setSeedPhraseEdit] = useState("");
-    const [lookback, setLookback] = useState(1);
+    const [lookback, setLookback] = useState(0);
 
     let seedPhraseEditTemp = seedPhraseEdit;
 
-    let lookbackTemp = userState ? userState[0]?.lookback : lookback;
-    lookbackTemp = lookbackTemp ? lookbackTemp : 1.0;
+    let lookbackTemp = userState ? userState?.lookback : lookback;
 
+    useEffect(() => {
+        // checks and balances
+        clientRoutine(
+            user,
+            supabase,
+            db,
+            value,
+        );
+    }, [userState?.seedPhrase, userState?.id])
 
-    if (!userState) {
-        return null
-    }
+    console.log("Account check user state:", userState)
+
+    // if not userState, initialize one
+    if (!userState) return null
+
     // SET STATE HANDLERS
 
     const handleSeedEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        seedPhraseEditTemp = e.target.value
+        seedPhraseEditTemp = e.target.innerText
     };
 
     const handleNumberFocus: ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -84,32 +98,31 @@ const HomePage = ({ initialSession, user }: Props) => {
 
     const handleNumberChange: ChangeEventHandler<HTMLInputElement> = (e) => {
         console.log("focusout", e.target.value)
-        void (async () => await db.state.put({lookback: e.target.value, id: user.id}))();
+        void (async () => await db.state.where("id").equals(user.id).modify({lookback: e.target.value}))();
+
         setLookback(parseFloat(e.target.value));
-        lookbackTemp = e.target.value;
+        lookbackTemp = parseFloat(e.target.value);
     }
 
     const handleSeedSave: MouseEventHandler<HTMLButtonElement> = () => {
         console.log("handle save", seedPhraseEditTemp)
-        void (async () => await db.state.put({seedPhrase: seedPhraseEditTemp, id: user.id}))();
+        void (async () => await db.state.where("id").equals(user.id).modify({seedPhrase: seedPhraseEditTemp}))();
         setEditing(!editing);
         // TODO update supabase records with new encryption
         // TODO update seed phrase hash
     };
 
     function editing_toggle() {
-        const phrase = userState ? userState[0]?.seedPhrase : ""
+        const phrase = userState ? userState?.seedPhrase : ""
         setSeedPhraseEdit(phrase ? phrase : "")
         setEditing(!editing);
         /* setSeedPhraseEdit(userState[0]?.seedPhrase) */
     }
 
     // process alerts
-    const test = ["test"];
     const alerts_render = alerts.map(
-        (a: string, idx) => {return (<Alert key={idx} alertcontent={a} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
+        (a: {alert: Alerts, timestamp: number}, idx) => {return (<Alert key={idx} alertcontent={a.alert} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
     )
-    console.log(alerts_render)
 
     const navList = (
     <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6">
@@ -121,6 +134,7 @@ const HomePage = ({ initialSession, user }: Props) => {
         <>
             <Header title="On Call" description="A tool for doctors who are on call and taking referrals"/>
             <main className="flex h-[calc(100vh)] flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] overflow-auto">
+                <div className="w-full sm:max-w-screen-xl absolute left-1/2 transform -translate-x-1/2">
                 <h1 className="text-[2.2rem] font-extrabold tracking-tight text-white sm:text-[3rem] p-4">
                     Account <span className="text-[hsl(280,100%,70%)]">Settings</span>
                 </h1>
@@ -166,11 +180,11 @@ const HomePage = ({ initialSession, user }: Props) => {
 
                 </div>
                 <div className="flex flex-row bg-white/10 rounded-xl text-white align-middle text-[0.9rem] sm:text-[1.1rem] font-bold mx-2 sm:mx-4">
-                    <div className="border-4 border-r-white p-3 rounded-xl min-w-fit"><p>Lookback</p></div>
+                    <div className="border-4 border-r-white p-5 sm:p-4 rounded-xl min-w-fit align-middle"><p>Lookback</p></div>
                     <input
                         type="number"
                         className="p-0 pl-2 font-normal bg-white/0 text-center"
-                        min="1" max="1000"
+                        min="0" max="1000"
                         onBlur={handleNumberFocus}
                         onChange={handleNumberChange}
                         value={lookbackTemp}
@@ -178,23 +192,21 @@ const HomePage = ({ initialSession, user }: Props) => {
                     <div
                         className="bg-white/0 text-white align-middle text-[0.5rem] my-4 p-2 sm:text-[0.7rem] font-normal mx-2 sm:mx-4 opacity-50"
                     >
-                        The default number of days the filter will lookback
+                        The number of days back to sync with the database (default 14 days, set 0 to sync all data)
                     </div>
                 </div>
 
-                <div className="h-full"></div>
 
-                <div className="text-white align-middle text-[0.9rem] sm:text-[1.1rem] font-bold mx-2 sm:mx-4">Alerts </div>
-                {
-                    alerts.length > 0 ?
-                    <div className="min-h-[64px]">{alerts_render}</div>:
-                    <div className="text-white align-middle text-[0.7rem] sm:text-[0.9rem] font-normal mx-2 sm:mx-4 min-h-[64px]">None</div>
-                }
-
+                </div>
             </main>
             <NavBar navList={navList}/>
+            {
+                alerts.length > 0 ?
+                <div className="fixed top-[0%] h-[100vh] w-[100vw]">{alerts_render}</div>:
+                                ""
+            }
         </>
     )
 }
 
-export default HomePage;
+export default Account;
