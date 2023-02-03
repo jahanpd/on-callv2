@@ -73,7 +73,7 @@ const Account = ({ initialSession, user }: Props) => {
 
     useEffect(() => {
         // checks and balances
-        clientRoutine(
+        void clientRoutine(
             user,
             supabase,
             db,

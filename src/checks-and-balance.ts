@@ -4,7 +4,7 @@ import type { db as DbDexie, Card } from "./database.config";
 import type { ContextType } from 'react';
 import type AppContext from "./AppContext";
 import { SeedError, SyncError } from "./types";
-import { getSupabaseUserState, getCardsAfterTimestamp, getCardsFromIds,
+import { getSupabaseUserState, getCardsFromIds,
          getCardInfoAfterTimestamp, setCards, setSupabaseUserState } from "./supabase-helper";
 import AES from 'crypto-js/aes';
 import { SHA1, SHA3, enc } from 'crypto-js'
@@ -59,7 +59,6 @@ export const checkSeedHash = async (
         )
         return SeedError.NoSupabase
     }
-    console.log(localHash, supabaseHash)
     if (localHash !== supabaseHash) return SeedError.Different
 
     return SeedError.Passed
@@ -148,12 +147,16 @@ export const checkDataSync = async (
         const newSupaCards = await getCardsFromIds(
             supabase,
             user,
-            download.map(c => c.cardId)
+            download.map((c: { cardId:string }) => c.cardId)
         )
         if (!newSupaCards) return SyncError.getError
         newSupaCards.map(async (c: {cardId: string, created_at: string | null, hash: string | null, encryption: string | null}) => {
             if (c.encryption) {
-            const newCard: Card = JSON.parse(AES.decrypt(c.encryption, seedPhrase).toString(enc.Utf8));
+                const newCard = JSON.parse(
+                    AES.decrypt(
+                        c.encryption, seedPhrase
+                    ).toString(enc.Utf8)
+                ) as Card;
             console.log("checkDataSync: newCard cardId check", newCard.cardId);
             await db.cards.put(newCard)
             }
