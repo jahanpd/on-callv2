@@ -104,6 +104,7 @@ const Card = ({ card, cards, setCards, selected, setSelected, force }: Props) =>
                 db,
                 1
             )
+            console.log("SAVE MSG", msg)
             if (msg != SyncError.Passed) {
                 alerts.push(
                     {alert: Alerts.SaveOperation, timestamp:Date.now()}

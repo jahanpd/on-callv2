@@ -2,12 +2,12 @@ import { useContext } from "react";
 import AppContext from "../AppContext";
 import type { SetStateAction, Dispatch } from "react";
 import { Alert as AlertUI } from "@material-tailwind/react";
-import type { Alerts } from '../types';
+import type { Alerts, SyncError, SeedError } from '../types';
 
 type Props = {
-    alertcontent: Alerts
-    alerts: Array<{ alert: Alerts, timestamp: number }>
-    setAlerts: Dispatch<SetStateAction<Array<{alert: Alerts, timestamp: number}>>>
+    alertcontent: Alerts | SeedError | SyncError
+    alerts: Array<{ alert: Alerts | SeedError | SyncError, timestamp: number }>
+    setAlerts: Dispatch<SetStateAction<Array<{alert: Alerts | SeedError | SyncError, timestamp: number}>>>
     force: Dispatch<SetStateAction<null>>
 }
 

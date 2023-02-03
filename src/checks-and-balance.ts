@@ -200,6 +200,7 @@ export const clientRoutine = async (
                 const syncStatus = await checkDataSync(user, supabase, db);
                 console.log("clientRoutine: data sync result:", syncStatus)
             }
+            return seedResult
         }
         if (subroutine == "dataSync") {
             const syncStatus = await checkDataSync(user, supabase, db);

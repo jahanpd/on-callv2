@@ -9,8 +9,9 @@ import NavBar from '../components/navbar';
 import Card from '../components/card';
 import Select from 'react-select'
 import type { SelectInstance, MultiValue } from 'react-select'
-import { type Filter as FilterType, SyncError } from '../types'
+import { type Filter as FilterType, SyncError, SeedError } from '../types'
 import { Alerts } from '../types'
+import { clientRoutine } from '../checks-and-balance';
 
 import AppContext from "../AppContext";
 import { useState, useContext, useCallback, useEffect } from 'react';
@@ -94,7 +95,7 @@ const HomePage = ({ initialSession, user }: Props) => {
         async () => db.state
                      .where("id")
         .equals(user.id)
-        .toArray()
+        .first()
     );
     const userCards = useLiveQuery(
         async () => db.cards
@@ -124,6 +125,7 @@ const HomePage = ({ initialSession, user }: Props) => {
         }
     }
 
+
     // DEFINE STATE VARIABLES HERE
     const initFilter: FilterType = {
         status: options.filter((o) => o.value == Status.Pending || o.value == Status.Transfer),
@@ -137,6 +139,27 @@ const HomePage = ({ initialSession, user }: Props) => {
     const [cards, setCards] = useState(cardsInit);
     const [selected, setSelected] = useState("");
 
+    useEffect(() => {
+        // checks and balances
+        let  error: SeedError | undefined
+        void (async () => {
+            error = await clientRoutine(
+                user,
+                supabaseClient,
+                db,
+                value,
+                "seedCheck"
+            );
+            if (error != SeedError.Passed) {
+                if (alerts.filter(a => a.alert == error).length == 0) {
+                    alerts.push(error ? {alert: error, timestamp: Date.now()} : {alert: Alerts.noSeed, timestamp: Date.now()})
+                    setAlerts(alerts)
+                }
+            }
+        })()
+    }, [userState?.seedPhrase, userState?.id])
+
+
     // return null while waiting dexie queries
     if (!userState) return null
     if (!userCards) return null
@@ -144,8 +167,8 @@ const HomePage = ({ initialSession, user }: Props) => {
     const sortFn = (a: CardType, b: CardType) => {return b.timestamp - a.timestamp;}
     userCards.sort(sortFn);
 
-    if (filter != userState[0]?.filterLocal) {
-        userState[0]?.filterLocal ? setFilter(userState[0]?.filterLocal) : ""
+    if (filter != userState?.filterLocal) {
+        userState?.filterLocal ? setFilter(userState?.filterLocal) : ""
     }
 
     // save filter to localdb
@@ -284,7 +307,7 @@ const HomePage = ({ initialSession, user }: Props) => {
 
     // prep alert notifications
     const alerts_render = alerts.map(
-        (a: {alert: Alerts, timestamp: number}, idx) => {return (<Alert key={idx} alertcontent={a.alert} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
+        (a: {alert: Alerts | SeedError | SyncError, timestamp: number}, idx) => {return (<Alert key={idx} alertcontent={a.alert} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
     )
 
     // generate navlist for this page
