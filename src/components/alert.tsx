@@ -14,7 +14,7 @@ type Props = {
 const Alert = ( { alertcontent, alerts, setAlerts, force } : Props ) => {
     const value = useContext(AppContext);
 
-    function removeAlert(alertcontent: Alerts){
+    function removeAlert(alertcontent: Alerts | SeedError | SyncError){
         setAlerts(alerts.filter((a) => a.alert !== alertcontent));
         console.log("post delete", alerts)
         force(null)

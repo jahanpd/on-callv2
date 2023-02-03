@@ -7,7 +7,7 @@ import Header from '../components/head';
 import NavBar from '../components/navbar';
 import Alert from '../components/alert';
 import AppContext from "../AppContext";
-import type { Alerts } from '../types';
+import { Alerts, SeedError, SyncError } from '../types';
 
 import { clientRoutine } from '../checks-and-balance';
 
@@ -121,7 +121,7 @@ const Account = ({ initialSession, user }: Props) => {
 
     // process alerts
     const alerts_render = alerts.map(
-        (a: {alert: Alerts, timestamp: number}, idx) => {return (<Alert key={idx} alertcontent={a.alert} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
+        (a: {alert: Alerts | SeedError | SyncError, timestamp: number}, idx) => {return (<Alert key={idx} alertcontent={a.alert} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
     )
 
     const navList = (

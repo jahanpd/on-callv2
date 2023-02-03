@@ -3,7 +3,7 @@ import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { SessionContextProvider, type Session } from '@supabase/auth-helpers-react'
 import { useState } from 'react'
 import AppContext from "../AppContext";
-import { Alerts } from "../types";
+import { Alerts, SeedError, SyncError } from "../types";
 
 import { ThemeProvider } from "@material-tailwind/react";
 
@@ -24,7 +24,7 @@ function MyApp({
     localHash: ""
   });
   const [euaCheck, setEuaCheck] = useState(false);
-  const initAlert: Array<{alert: Alerts, timestamp: number}> = [];
+  const initAlert: Array<{alert: Alerts | SeedError | SyncError, timestamp: number}> = [];
   const [alerts, setAlerts] = useState(initAlert);
 
   return (
