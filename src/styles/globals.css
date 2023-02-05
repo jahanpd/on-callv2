@@ -2,8 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+.urn-placeholder[contentEditable=true]:empty:before {
+    content: "enter urn";
+    opacity: 0.6;
+}
+.name-placeholder[contentEditable=true]:empty:before {
+    content: "enter name";
+    opacity: 0.6;
+}
+
+.summary-placeholder[contentEditable=true]:empty:before {
+    content: "enter summary";
+    opacity: 0.6;
+}
+.content-placeholder[contentEditable=true]:empty:before {
+    content: "enter story";
+    opacity: 0.6;
 }

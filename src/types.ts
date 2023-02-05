@@ -2,6 +2,8 @@
 export const Status = {
     Pending: 'Pending',
     Seen: 'Seen',
+    Admitted: 'Admitted',
+    Discharged: 'Discharged',
     Completed:'Completed',
     Transfer: 'Transfer',
     Other: 'Other'

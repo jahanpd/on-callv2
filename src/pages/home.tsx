@@ -9,7 +9,7 @@ import NavBar from '../components/navbar';
 import Card from '../components/card';
 import Select from 'react-select'
 import type { SelectInstance, MultiValue } from 'react-select'
-import { type Filter as FilterType, SyncError, SeedError } from '../types'
+import { type Filter as FilterType, SyncError, SeedError, Status } from '../types'
 import { Alerts } from '../types'
 import { clientRoutine } from '../checks-and-balance';
 
@@ -63,15 +63,6 @@ export function getOffsetTimeString(date: Date) {
     const offset = new Date(date.getTime() - date.getTimezoneOffset()*60*1000)
     return offset.toISOString().substring(0,19)
 }
-
-const Status = {
-    Pending: 'Pending',
-    Seen: 'Seen',
-    Completed:'Completed',
-    Transfer: 'Transfer',
-    Other: 'Other',
-} as const;
-type StatusType = "Pending" | "Seen" | "Completed" | "Transfer" | "Other"
 
 type Props = {
     initialSession: Session,
