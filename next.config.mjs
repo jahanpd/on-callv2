@@ -6,7 +6,10 @@
 !process.env.SKIP_ENV_VALIDATION && (await import("./src/env/server.mjs"));
 
 /** @type {import("next").NextConfig} */
-import withPWA from 'next-pwa';
+import withPWAwrap from 'next-pwa';
+const withPWA = withPWAwrap({
+  dest: 'public'
+})
 
 
 const config = {
@@ -18,4 +21,4 @@ const config = {
     defaultLocale: "en",
   },
 };
-export default config;
+export default withPWA(config);

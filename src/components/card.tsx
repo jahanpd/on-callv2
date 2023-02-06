@@ -144,13 +144,13 @@ const Card = ({ card, cards, setCards, selected, setSelected, force }: Props) =>
     const openHeader = (
         <div className={``}>
             <div className={`text-white p-2 flex flex-row items-center`}>
-                <h3 className="min-w-[100px] pr-4 py-1 font-bold urn-placeholder"
+                <h3 className="min-w-[80px] pr-4 py-1 font-bold urn-placeholder"
                     contentEditable
                     onInput={handleUrnEdit}
                 >
                     {cardState.urn ? cardState.urn : ""}
                 </h3>
-                <h3 className="min-w-[100px] pr-4 py-1 font-bold name-placeholder"
+                <h3 className="min-w-[95px] pr-4 py-1 font-bold name-placeholder"
                     contentEditable
                     onInput={handleNameEdit}
                 >
