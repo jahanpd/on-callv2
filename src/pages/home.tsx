@@ -7,14 +7,14 @@ import type { User, Session } from '@supabase/auth-helpers-react';
 import Header from '../components/head';
 import NavBar from '../components/navbar';
 import Card from '../components/card';
+import Load from '../components/loading';
 import Select from 'react-select'
-import type { SelectInstance, MultiValue } from 'react-select'
 import { type Filter as FilterType, SyncError, SeedError, Status } from '../types'
 import { Alerts } from '../types'
 import { clientRoutine } from '../checks-and-balance';
 
 import AppContext from "../AppContext";
-import { useState, useContext, useCallback, useEffect } from 'react';
+import { useState, useContext, useReducer, useEffect } from 'react';
 import type { SetStateAction, Dispatch } from "react";
 
 import { useLiveQuery } from "dexie-react-hooks";
@@ -78,14 +78,17 @@ const HomePage = ({ initialSession, user }: Props) => {
     const setAlerts = value ? value.setAlerts : () => {[]};
 
     // this is a hacky solution to force refresh when alerts dismissed
-    const [, updateState] = useState();
-    const forceUpdate = useCallback(() => updateState(undefined), []);
+    const [ignored, forceUpdater] = useReducer( (x: number) => x + 1, 0);
+
+    function forceUpdate() {
+        forceUpdater();
+    }
 
     // GET PREVIOUS VALUES FROM INDEXEDDB STORE
     const userState = useLiveQuery(
         async () => db.state
                      .where("id")
-        .equals(user.id)
+                     .equals(user.id)
         .first()
     );
     const userCards = useLiveQuery(
@@ -119,15 +122,13 @@ const HomePage = ({ initialSession, user }: Props) => {
 
     // DEFINE STATE VARIABLES HERE
     const initFilter: FilterType = {
-        status: options.filter((o) => o.value == Status.Pending || o.value == Status.Transfer),
+        status: options.filter((o) => o.value == Status.Pending || o.value == Status.Transfer || Status.Admitted || Status.Seen),
         from: new Date(Date.now() - (1*24*60*60*1000)),
         to: new Date(Date.now() + (1*24*60*60*1000)),
         urn: "",
     }
     const [filter, setFilter]: [FilterType, Dispatch<SetStateAction<FilterType>>] = useState(initFilter);
     const [filterOpen, setFilterOpen] = useState(0);
-    const cardsInit: Array<CardType> = []
-    const [cards, setCards] = useState(cardsInit);
     const [selected, setSelected] = useState("");
 
     useEffect(() => {
@@ -142,9 +143,11 @@ const HomePage = ({ initialSession, user }: Props) => {
                 "seedCheck"
             );
             if (error != SeedError.Passed) {
-                if (alerts.filter(a => a.alert == error).length == 0) {
+                if (alerts.filter(a => a.alert == error).length == 0 && error != SeedError.SupabaseRetrievalError) {
                     alerts.push(error ? {alert: error, timestamp: Date.now()} : {alert: Alerts.noSeed, timestamp: Date.now()})
                     setAlerts(alerts)
+                } else if (error == SeedError.SupabaseRetrievalError) {
+                    console.log("Internet likely not connected")
                 }
             }
         })()
@@ -152,27 +155,30 @@ const HomePage = ({ initialSession, user }: Props) => {
 
 
     // return null while waiting dexie queries
-    if (!userState) return null
-    if (!userCards) return null
+    if (!userState) return Load
+    if (!userCards) return Load
 
     const sortFn = (a: CardType, b: CardType) => {return b.timestamp - a.timestamp;}
     userCards.sort(sortFn);
 
+    navigator.onLine
     if (filter != userState?.filterLocal) {
-        userState?.filterLocal ? setFilter(userState?.filterLocal) : ""
+        if (userState?.filterLocal) {setFilter(userState?.filterLocal)}
     }
 
     // save filter to localdb
     const storeFilterLocal = () => {
         void (async () => await db.state.where("id").equals(user.id).modify(
-            {filter: filter}
+            {filterLocal: filter}
         ))();
     }
 
     const resetFilter = () => {
         setFilter(initFilter)
+        const reset = initFilter;
+        reset.status = filter.status;
         void (async () => await db.state.where("id").equals(user.id).modify(
-            {filter: null}
+            {filterLocal: reset}
         ))();
     }
 
@@ -291,7 +297,7 @@ const HomePage = ({ initialSession, user }: Props) => {
         })
         .map((c, i) => {
             return (
-                <Card key={i} card={c} cards={cards} setCards={setCards} selected={selected} setSelected={setSelected} force={forceUpdate}/>
+                <Card key={i} card={c} cards={userCards} selected={selected} setSelected={setSelected}/>
             )
         })
     console.log("visualise usercards", userCards)
@@ -390,7 +396,7 @@ const HomePage = ({ initialSession, user }: Props) => {
                                 </div>
                                 <div className="grid grid-cols-1 justify-items-end sm:justify-items-center">
                                     <Button onClick={resetFilter}>
-                                        Reset
+                                        Reset Time
                                     </Button>
                                 </div>
                             </div>

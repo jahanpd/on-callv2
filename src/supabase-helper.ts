@@ -180,7 +180,6 @@ export const setSupabaseUserState = async (
       console.log('User state updated!')
 
     } catch (error) {
-      alert('Error updating the user state!')
       console.log(error)
       return error
     }
@@ -224,4 +223,3 @@ export const setCards = async (
     }
 }
 
-//TODO get cards based on lookback time (timestamp from min(now - latest edit, now - lookback))

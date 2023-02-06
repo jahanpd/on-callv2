@@ -6,6 +6,7 @@ import type { Database } from '../utils/supabaseTypes';
 import Header from '../components/head';
 import NavBar from '../components/navbar';
 import Alert from '../components/alert';
+import Load from '../components/loading';
 import AppContext from "../AppContext";
 import { Alerts, SeedError, SyncError } from '../types';
 
@@ -84,7 +85,7 @@ const Account = ({ initialSession, user }: Props) => {
     console.log("Account check user state:", userState)
 
     // if not userState, initialize one
-    if (!userState) return null
+    if (!userState) return Load
 
     // SET STATE HANDLERS
 

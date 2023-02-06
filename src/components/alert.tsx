@@ -8,7 +8,7 @@ type Props = {
     alertcontent: Alerts | SeedError | SyncError
     alerts: Array<{ alert: Alerts | SeedError | SyncError, timestamp: number }>
     setAlerts: Dispatch<SetStateAction<Array<{alert: Alerts | SeedError | SyncError, timestamp: number}>>>
-    force: Dispatch<SetStateAction<null>>
+    force: Dispatch<SetStateAction<number>>
 }
 
 const Alert = ( { alertcontent, alerts, setAlerts, force } : Props ) => {
@@ -17,7 +17,7 @@ const Alert = ( { alertcontent, alerts, setAlerts, force } : Props ) => {
     function removeAlert(alertcontent: Alerts | SeedError | SyncError){
         setAlerts(alerts.filter((a) => a.alert !== alertcontent));
         console.log("post delete", alerts)
-        force(null)
+        force(0)
     }
 
     console.log("in alert", alertcontent)

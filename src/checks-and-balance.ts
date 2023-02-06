@@ -43,6 +43,9 @@ export const checkSeedHash = async (
         noPreviousUserState = state ? false : true
         supabaseHash = state?.seedhash ? state.seedhash : "";
     } )();
+    if (noPreviousUserState) {
+        return SeedError.SupabaseRetrievalError
+    }
     if ((!supabaseHash && localHash) || noPreviousUserState) {
         console.log("checkSeedHash: setting seed phrase");
         const setStateOutput = setSupabaseUserState(
@@ -179,6 +182,8 @@ export const checkDataSync = async (
             }})
         );
         if (setError) return SyncError.setError
+
+    // TODO fix the edge case where cards have been deleted on one device, but still exist on another
     }
     return SyncError.Passed
 }

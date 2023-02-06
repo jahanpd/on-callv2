@@ -46,6 +46,7 @@ export const SeedError = {
     Different: "Local input seed different to other device(s)",
     NoSupabase: "Local input seed but no hash recorded. Push to server",
     Passed: "Seed hash passed check",
+    SupabaseRetrievalError: "Check internet connection"
 } as const;
 
 export type SeedError = typeof SeedError[keyof typeof SeedError]

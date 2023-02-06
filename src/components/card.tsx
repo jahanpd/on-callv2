@@ -27,22 +27,20 @@ import AppContext from "../AppContext";
 type Props = {
     card: CardType
     cards: Array<CardType>
-    setCards: Dispatch<SetStateAction<Array<CardType>>>
     selected: string
     setSelected: Dispatch<SetStateAction<string>>
-    force: Dispatch<SetStateAction<null>>
 }
 
-const Card = ({ card, cards, setCards, selected, setSelected, force }: Props) => {
+const Card = ({ card, cards, selected, setSelected }: Props) => {
     const value = useContext(AppContext);
+    const deepCard = structuredClone(card);
     const alerts = value ? value.state.alerts : [];
     const setAlerts = value ? value.setAlerts : () => {[]};
 
     const supabaseClient = useSupabaseClient<Database>();
-    const router = useRouter();
     const user = useUser();
     const [openCard, setOpenCard] = useState(false);
-    const [cardState, setCardState] = useState(card);
+    const [cardState, setCardState] = useState(deepCard);
 
     if (selected !== card.cardId && openCard) {
         setOpenCard(false)
@@ -54,7 +52,8 @@ const Card = ({ card, cards, setCards, selected, setSelected, force }: Props) =>
     };
     const deselectCard = () => {
         setSelected("");
-        setOpenCard(false)
+        setOpenCard(false);
+        setCardState(deepCard);
     };
 
     const optionsStatus = []
@@ -67,28 +66,22 @@ const Card = ({ card, cards, setCards, selected, setSelected, force }: Props) =>
 
     // handlers
     const handleUrnEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        console.log("urn change", e.target.innerText)
         cardState.urn = e.target.innerText;
         setCardState(cardState)
     }
     const handleNameEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        console.log("name change", e.target.innerText)
         cardState.name = e.target.innerText;
     }
     const handleDobEdit = (e: Date | null) => {
-        console.log("dob change", e);
         cardState.dob = e?.getTime();
     }
     const handleSummaryEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        console.log("summ change", e.target.innerText)
         cardState.summary = e.target.innerText;
     }
     const handleContentEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        console.log("cont change", e.target.innerText)
         cardState.content = e.target.innerText;
     }
     const handleStatusEdit = (e: string | undefined) => {
-        console.log("status change", e)
         const newStatus: Status = e ? Status[e as keyof typeof Status] : Status.Pending;
         cardState.status = newStatus;
     }
@@ -110,15 +103,17 @@ const Card = ({ card, cards, setCards, selected, setSelected, force }: Props) =>
                     {alert: Alerts.SaveOperation, timestamp:Date.now()}
                 )
                 setAlerts(alerts)
-                force(null)
             }
         })();
     }
-    const borderColour: "white" | "red-500" | "orange-500" | "green-500" | "cyan-500" = cardState.status == Status.Admitted  || cardState.status == Status.Completed ||
-                                                                      cardState.status == Status.Discharged  ? "green-500" :
-                                                                      cardState.status == Status.Pending ? "red-500" :
-                                                                      cardState.status == Status.Seen ? "orange-500" :
-                                                                      cardState.status == Status.Transfer ? "cyan-500" : "white"
+
+    type borderColourType = "white" | "red-500" | "orange-500" | "green-500" | "cyan-500"
+    const borderColour: borderColourType = cardState.status == Status.Admitted  ||
+                                           cardState.status == Status.Completed ||
+                                            cardState.status == Status.Discharged  ? "green-500" :
+                                            cardState.status == Status.Pending ? "red-500" :
+                                            cardState.status == Status.Seen ? "orange-500" :
+                                            cardState.status == Status.Transfer ? "cyan-500" : "white"
 
 
     const closedHeader = (
