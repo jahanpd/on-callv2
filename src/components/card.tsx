@@ -23,7 +23,6 @@ import { db, type Card as CardType } from "../database.config";
 import { checkDataSync } from "../checks-and-balance";
 import type { Database } from '../utils/supabaseTypes';
 import AppContext from "../AppContext";
-import { useLiveQuery } from "dexie-react-hooks";
 
 type Props = {
     card: CardType

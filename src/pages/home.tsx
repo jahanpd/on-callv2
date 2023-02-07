@@ -36,6 +36,7 @@ import {
 } from "@material-tailwind/react";
 import { deleteCard } from "../supabase-helper"
 import { checkDataSync } from "../checks-and-balance";
+import PullToRefresh from 'react-simple-pull-to-refresh';
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const supabase = createServerSupabaseClient(context);
@@ -214,6 +215,17 @@ const HomePage = ({ initialSession, user }: Props) => {
     setFilterOpen(filterOpen === value ? 0 : value);
     };
 
+
+    const handleRefresh = async () => {
+        await clientRoutine(
+                user,
+                supabaseClient,
+                db,
+                value,
+                "seedCheck"
+            );
+    }
+
     // handler to add card
     async function addCard() {
         const newCard = {
@@ -334,7 +346,7 @@ const HomePage = ({ initialSession, user }: Props) => {
             </Menu>
         </li>
         <li>
-            <Button variant="gradient" size="sm" className="mt-2 sm:mt-0 p-3 w-[100px]" color="white" onClick={addCard}>
+            <Button variant="gradient" size="sm" className="mt-2 sm:mt-0 p-3 w-[100px]" color="white" onClick={() => void addCard()}>
                 Add Card
             </Button>
         </li>
@@ -404,12 +416,14 @@ const HomePage = ({ initialSession, user }: Props) => {
                             </div>
                         </AccordionBody>
                     </Accordion>
-                    <div className="container mx-[5px] h-full w-full mt-2 items-center">
-                        <div className="grid grid-cols-1 gap-4 justify-items-center">
-                            {cardsDisplay}
+                    <PullToRefresh onRefresh={handleRefresh}>
+                        <div className="container mx-[5px] h-full w-full mt-2 items-center">
+                            <div className="grid grid-cols-1 gap-4 justify-items-center">
+                                {cardsDisplay}
+                            </div>
+                            <div className="flex flex-col w-full h-1/2 items-center"/>
                         </div>
-                        <div className="flex flex-col w-full h-1/2 items-center"/>
-                    </div>
+                    </PullToRefresh>
                 </div>
             </main>
             <NavBar navList={navList} />
