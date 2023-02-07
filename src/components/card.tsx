@@ -23,24 +23,23 @@ import { db, type Card as CardType } from "../database.config";
 import { checkDataSync } from "../checks-and-balance";
 import type { Database } from '../utils/supabaseTypes';
 import AppContext from "../AppContext";
+import { useLiveQuery } from "dexie-react-hooks";
 
 type Props = {
     card: CardType
-    cards: Array<CardType>
     selected: string
     setSelected: Dispatch<SetStateAction<string>>
 }
 
-const Card = ({ card, cards, selected, setSelected }: Props) => {
+const Card = ({ card, selected, setSelected }: Props) => {
+
     const value = useContext(AppContext);
-    const deepCard = structuredClone(card);
     const alerts = value ? value.state.alerts : [];
     const setAlerts = value ? value.setAlerts : () => {[]};
 
     const supabaseClient = useSupabaseClient<Database>();
     const user = useUser();
     const [openCard, setOpenCard] = useState(false);
-    const [cardState, setCardState] = useState(deepCard);
 
     if (selected !== card.cardId && openCard) {
         setOpenCard(false)
@@ -53,7 +52,10 @@ const Card = ({ card, cards, selected, setSelected }: Props) => {
     const deselectCard = () => {
         setSelected("");
         setOpenCard(false);
-        setCardState(deepCard);
+        // this causes a rerender of the list to remove changes
+        void (async () => {
+            await db.cards.where("cardId").equals(card.cardId).modify((c: CardType) => {c.cardId = c.cardId});
+        })()
     };
 
     const optionsStatus = []
@@ -66,31 +68,31 @@ const Card = ({ card, cards, selected, setSelected }: Props) => {
 
     // handlers
     const handleUrnEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        cardState.urn = e.target.innerText;
-        setCardState(cardState)
+        card.urn = e.target.innerText;
     }
     const handleNameEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        cardState.name = e.target.innerText;
+        card.name = e.target.innerText;
     }
     const handleDobEdit = (e: Date | null) => {
-        cardState.dob = e?.getTime();
+        card.dob = e?.getTime();
     }
     const handleSummaryEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        cardState.summary = e.target.innerText;
+        card.summary = e.target.innerText;
     }
     const handleContentEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
-        cardState.content = e.target.innerText;
+        card.content = e.target.innerText;
     }
     const handleStatusEdit = (e: string | undefined) => {
         const newStatus: Status = e ? Status[e as keyof typeof Status] : Status.Pending;
-        cardState.status = newStatus;
+        card.status = newStatus;
     }
 
     if (!user) return null
+
     const handleSaveCard = () => {
         console.log(card);
         void (async () => {
-            await db.cards.where("cardId").equals(cardState.cardId).modify(cardState);
+            await db.cards.where("cardId").equals(card.cardId).modify(card);
             const msg = await checkDataSync(
                 user,
                 supabaseClient,
@@ -108,30 +110,30 @@ const Card = ({ card, cards, selected, setSelected }: Props) => {
     }
 
     type borderColourType = "white" | "red-500" | "orange-500" | "green-500" | "cyan-500"
-    const borderColour: borderColourType = cardState.status == Status.Admitted  ||
-                                           cardState.status == Status.Completed ||
-                                            cardState.status == Status.Discharged  ? "green-500" :
-                                            cardState.status == Status.Pending ? "red-500" :
-                                            cardState.status == Status.Seen ? "orange-500" :
-                                            cardState.status == Status.Transfer ? "cyan-500" : "white"
+    const borderColour: borderColourType = card.status == Status.Admitted  ||
+                                           card.status == Status.Completed ||
+                                            card.status == Status.Discharged  ? "green-500" :
+                                            card.status == Status.Pending ? "red-500" :
+                                            card.status == Status.Seen ? "orange-500" :
+                                            card.status == Status.Transfer ? "cyan-500" : "white"
 
 
     const closedHeader = (
         <div onClick={selectCard}>
             <div className={`text-white/70 p-2 flex flex-row items-center`}>
-                <h3 className="min-w-max pr-4 py-1 font-bold"> {cardState.urn ? cardState.urn : "NO UID"} </h3>
-                <h3 className="min-w-max pr-4 py-1 font-bold"> {cardState.name ? cardState.name : "UNNAMED"} </h3>
+                <h3 className="min-w-max pr-4 py-1 font-bold"> {card.urn ? card.urn : "NO UID"} </h3>
+                <h3 className="min-w-max pr-4 py-1 font-bold"> {card.name ? card.name : "UNNAMED"} </h3>
                 {
-                    cardState.dob
-                    ? <h3 className="min-w-max py-1 pr-4 font-bold" contentEditable> {cardState.dob ? Math.floor((Date.now() - new Date(cardState.dob).getTime()) / 3.15576e+10).toString() + "yo": ""} </h3>
+                    card.dob
+                    ? <h3 className="min-w-max py-1 pr-4 font-bold" contentEditable> {card.dob ? Math.floor((Date.now() - new Date(card.dob).getTime()) / 3.15576e+10).toString() + "yo": ""} </h3>
                     : ""
                 }
                 <div className="w-full"></div>
-                <p className="min-w-max py-1 text-[0.5rem]"> {getOffsetTimeString(new Date(cardState.timestamp))} </p>
+                <p className="min-w-max py-1 text-[0.5rem]"> {getOffsetTimeString(new Date(card.timestamp))} </p>
             </div>
 
             <div className="text-white/70 w-full px-2 pb-2 italic">
-                {cardState.summary ? cardState.summary : "NO SUMMARY"}
+                {card.summary ? card.summary : "NO SUMMARY"}
             </div>
         </div>
     )
@@ -143,25 +145,25 @@ const Card = ({ card, cards, selected, setSelected }: Props) => {
                     contentEditable
                     onInput={handleUrnEdit}
                 >
-                    {cardState.urn ? cardState.urn : ""}
+                    {card.urn ? card.urn : ""}
                 </h3>
                 <h3 className="min-w-[95px] pr-4 py-1 font-bold name-placeholder"
                     contentEditable
                     onInput={handleNameEdit}
                 >
-                    {cardState.name ? cardState.name : ""}
+                    {card.name ? card.name : ""}
                 </h3>
                 <p className="text-white/70 font-bold pr-2">DOB: </p>
                 <div className="mr-2">
                     <DatePicker
-                        value={cardState.dob ? new Date(cardState.dob) : null}
+                        value={card.dob ? new Date(card.dob) : null}
                         onChange={(date: Date) => { handleDobEdit(date) }}
                         disableCalendar={true}
                     />
                 </div>
                 {
-                    cardState.dob
-                        ? <h3 className="min-w-max py-1 pr-4 font-bold" contentEditable> {cardState.dob ? Math.floor((Date.now() - new Date(cardState.dob).getTime()) / 3.15576e+10).toString() + "yo" : ""} </h3>
+                    card.dob
+                        ? <h3 className="min-w-max py-1 pr-4 font-bold" contentEditable> {card.dob ? Math.floor((Date.now() - new Date(card.dob).getTime()) / 3.15576e+10).toString() + "yo" : ""} </h3>
                         : ""
                 }
             </div>
@@ -169,7 +171,7 @@ const Card = ({ card, cards, selected, setSelected }: Props) => {
                 contentEditable
                 onInput={handleSummaryEdit}
             >
-                {cardState.summary ? cardState.summary : ""}
+                {card.summary ? card.summary : ""}
             </div>
 
 
@@ -186,7 +188,7 @@ const Card = ({ card, cards, selected, setSelected }: Props) => {
                     contentEditable
                     onInput={handleContentEdit}
                 >
-                    {cardState.content ? cardState.content : ""}
+                    {card.content ? card.content : ""}
                 </div>
                 <div className="flex flex-row w-full gap-6 bg-white/10 items-center py-2 px-2 h-fit">
                     <IconButton className="w-20 ml-4" size="sm" color="yellow" onClick={deselectCard}>
@@ -197,7 +199,7 @@ const Card = ({ card, cards, selected, setSelected }: Props) => {
                     </IconButton>
                     <Select label="status" variant="static"
                         className="text-white text-[0.8rem] pt-1"
-                        value={cardState.status?.toString()}
+                        value={card.status?.toString()}
                         onChange={handleStatusEdit}
                     >
                         {optionsStatus}

@@ -86,13 +86,13 @@ const HomePage = ({ initialSession, user }: Props) => {
 
     // GET PREVIOUS VALUES FROM INDEXEDDB STORE
     const userState = useLiveQuery(
-        async () => db.state
-                     .where("id")
-                     .equals(user.id)
-        .first()
+        async () => await db.state
+            .where("id")
+            .equals(user.id)
+            .first()
     );
     const userCards = useLiveQuery(
-        async () => db.cards
+        async () => await db.cards
         .where("uid")
         .equals(user.id)
         .toArray()
@@ -215,7 +215,7 @@ const HomePage = ({ initialSession, user }: Props) => {
     };
 
     // handler to add card
-    function addCard() {
+    async function addCard() {
         const newCard = {
             uid: user.id,
             cardId: uuidv4(),
@@ -229,36 +229,37 @@ const HomePage = ({ initialSession, user }: Props) => {
             notes: [],
         }
         console.log("adding", newCard)
-        void (async () => await db.cards.add(newCard))();
+        await db.cards.add(newCard);
+        setSelected(newCard.cardId);
+        forceUpdate();
     }
 
-    function deleteSelected() {
+    async function deleteSelected() {
         if (!userCards) return
         for (const c of userCards) {
             if (c.cardId == selected) {
                 if (!c) return
-                void (async () => {
-                    await db.cards.where("cardId").equals(c.cardId).delete();
-                    // delete from supabase
+                await db.cards.where("cardId").equals(c.cardId).delete();
+                // delete from supabase
 
-                    const msg = await deleteCard(supabaseClient, user, c.cardId)
-                    if (!msg) {
-                        alerts.push(
-                            {alert: Alerts.supabaseDeleteFail, timestamp:Date.now()}
-                        )
-                        setAlerts(alerts)
-                        forceUpdate()
-                    } else if (msg > 1) {
-                        alerts.push(
-                            {alert: Alerts.supabaseDeleteSuccess, timestamp:Date.now()}
-                        )
-                        setAlerts(alerts)
-                        forceUpdate()
+                const msg = await deleteCard(supabaseClient, user, c.cardId)
+                if (!msg) {
+                    alerts.push(
+                        {alert: Alerts.supabaseDeleteFail, timestamp:Date.now()}
+                    )
+                    setAlerts(alerts)
+                    forceUpdate()
+                } else if (msg > 1) {
+                    alerts.push(
+                        {alert: Alerts.supabaseDeleteSuccess, timestamp:Date.now()}
+                    )
+                    setAlerts(alerts)
+                    forceUpdate()
                     }
-                })();
+                }
             }
-        }
         console.log("card length", userCards.length)
+        forceUpdate();
     }
 
     const syncWithDatabase = async () => {
@@ -297,10 +298,11 @@ const HomePage = ({ initialSession, user }: Props) => {
         })
         .map((c, i) => {
             return (
-                <Card key={i} card={c} cards={userCards} selected={selected} setSelected={setSelected}/>
+                <Card key={i} card={c} selected={selected} setSelected={setSelected}/>
             )
         })
     console.log("visualise usercards", userCards)
+    console.log("visualise usercards", cardsDisplay)
 
     // prep alert notifications
     const alerts_render = alerts.map(
@@ -316,7 +318,7 @@ const HomePage = ({ initialSession, user }: Props) => {
                     <Button className="bg-[hsl(280,100%,70%)]">actions</Button>
                 </MenuHandler>
                 <MenuList className="bg-white">
-                    <MenuItem className="text-center" onClick={deleteSelected}>
+                    <MenuItem className="text-center" onClick={() => void deleteSelected()}>
                         Delete Selected Card
                     </MenuItem>
                     <MenuItem className="text-center" onClick={() => void syncWithDatabase()}>
