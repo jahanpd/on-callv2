@@ -416,7 +416,7 @@ const HomePage = ({ initialSession, user }: Props) => {
                         </AccordionBody>
                     </Accordion>
                     <PullToRefresh onRefresh={handleRefresh}>
-                        <div className="container mx-[5px] h-full w-full mt-2 items-center">
+                        <div className="container h-full w-full mt-2 items-center">
                             <div className="grid grid-cols-1 gap-4 justify-items-center">
                                 {cardsDisplay}
                             </div>
