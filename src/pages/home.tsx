@@ -222,7 +222,6 @@ const HomePage = ({ initialSession, user }: Props) => {
                 supabaseClient,
                 db,
                 value,
-                "seedCheck"
             );
     }
 

@@ -136,6 +136,7 @@ export const checkDataSync = async (
             if (supaCard.length > 0) {
                 if (supaCard[0]){
                     // only upload if edited after supacard
+                   console.log(new Date(supaCard[0].created_at ? supaCard[0].created_at : 0), c.date)
                     if (new Date(supaCard[0].created_at ? supaCard[0].created_at : 0) < c.date) {
                         return {ret: true, c: c}
                     }

@@ -91,6 +91,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
     const handleSaveCard = () => {
         console.log(card);
         void (async () => {
+            card.timestampEdit = Date.now()
             await db.cards.where("cardId").equals(card.cardId).modify(card);
             const msg = await checkDataSync(
                 user,
