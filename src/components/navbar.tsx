@@ -10,6 +10,8 @@ import {
 } from "@material-tailwind/react";
 import { useRouter } from 'next/router';
 
+type PageType = "home" | "other"
+
 const navList = (
     <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6">
         <li>
@@ -17,9 +19,11 @@ const navList = (
         </li>
     </ul>)
 type Props = {
-    navList: typeof navList
+    navList: typeof navList | ""
+    page: PageType
 }
-const NavBar = ( {navList}: Props ) => {
+
+const NavBar = ( {navList, page}: Props ) => {
     const user = useUser();
     const [openNav, setOpenNav] = useState(false);
     const router = useRouter();
@@ -50,32 +54,38 @@ const NavBar = ( {navList}: Props ) => {
                  <Button variant="gradient" size="sm" className="hidden lg:inline-block w-[100px] p-3" color="white" onClick={
                  () => {void router.push('/account')}
                  }>
-                         ⚙️
-                     </Button>
+                     ⚙️
+                 </Button>
                 : ""
                 }
                 {user ?
-                     <Button variant="gradient" size="sm" className="hidden lg:inline-block !w-[100px] p-3" color="white" onClick={
+                 page == "home" ?
+                 <Button variant="gradient" size="sm" className="hidden lg:inline-block !w-[100px] p-3" color="white" onClick={
+                 () => {void router.push('/notes')}
+                 }>
+                     notes
+                 </Button> :
+                 <Button variant="gradient" size="sm" className="hidden lg:inline-block !w-[100px] p-3" color="white" onClick={
                  () => {void router.push('/home')}
-                     }>
-                         list
-                     </Button>
+                 }>
+                     list
+                 </Button>
                 : ""
                 }
 
                 {user ?
-                     <Button variant="gradient" size="sm" className="hidden lg:inline-block" color="white" onClick={
+                 <Button variant="gradient" size="sm" className="hidden lg:inline-block" color="white" onClick={
                  () => {void router.push('/logout')}
-                     }
-                     >
-                         logout
-                     </Button>
+                 }
+                 >
+                     logout
+                 </Button>
                 :
-                     <Button variant="gradient" size="sm" className="hidden lg:inline-block" color="white" onClick={
+                 <Button variant="gradient" size="sm" className="hidden lg:inline-block" color="white" onClick={
                  () => {void router.push('/auth')}
-                     }>
-                         login
-                     </Button>
+                 }>
+                     login
+                 </Button>
                 }
 
                 <IconButton
@@ -134,24 +144,35 @@ const NavBar = ( {navList}: Props ) => {
                             }
                         </div>
                     </Button>
-                    {user ?
-                     <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white" onClick={
-                    () => {void router.push('/account')}
-                     }>
-                     ⚙️
-                     </Button>
-                    : ""
-                    }
-                    {user ?
-                     <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white" onClick={
-                    () => {void router.push('/home')}
-                     }>
-                     list
-                     </Button>
-                    : ""
-                    }
-
-                    <div className="">{navList}</div>
+                    <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6">
+                        <li>
+                            {user ?
+                             <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white" onClick={
+                             () => {void router.push('/account')}
+                             }>
+                                 ⚙️
+                             </Button>
+                            : ""
+                            }
+                        </li>
+                        <li>
+                            {user ?
+                             page == "home" ?
+                             <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white" onClick={
+                             () => {void router.push('/notes')}
+                             }>
+                                 notes
+                             </Button> :
+                             <Button variant="gradient" size="sm" className="mb-4 !w-[100px]" color="white" onClick={
+                             () => {void router.push('/home')}
+                             }>
+                                 list
+                             </Button>
+                            : ""
+                            }
+                        </li>
+                    </ul>
+                    {navList}
                 </div>
             </MobileNav>
         </Navbar>

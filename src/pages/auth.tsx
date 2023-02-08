@@ -68,7 +68,7 @@ const Authenticate = ( {} ) => {
                     </div>
                 }
             </main>
-            <NavBar navList={navList}/>
+            <NavBar navList={navList} page="other"/>
 
             </>
     );

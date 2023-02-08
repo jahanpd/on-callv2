@@ -12,7 +12,7 @@
 }
 
 .summary-placeholder[contentEditable=true]:empty:before {
-    content: "enter summary";
+    content: "enter location / summary";
     opacity: 0.6;
 }
 .content-placeholder[contentEditable=true]:empty:before {

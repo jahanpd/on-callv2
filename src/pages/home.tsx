@@ -113,10 +113,12 @@ const HomePage = ({ initialSession, user }: Props) => {
     const cardOptions = []
     if (userCards) {
         for (const k of userCards) {
-            cardOptions.push({
-                value: k?.cardId,
-                label: `${k.urn ? k.urn : ""} ${k.name ? k.name : ""}`
-            })
+            if (k.urn || k.name) {
+                cardOptions.push({
+                    value: k?.cardId,
+                    label: `${k.urn ? k.urn : ""} ${k.name ? k.name : ""}`
+                })
+            }
         }
     }
 
@@ -420,12 +422,12 @@ const HomePage = ({ initialSession, user }: Props) => {
                             <div className="grid grid-cols-1 gap-4 justify-items-center">
                                 {cardsDisplay}
                             </div>
-                            <div className="flex flex-col w-full h-1/2 items-center"/>
+                            <div className="flex flex-col w-full h-full items-center"/>
                         </div>
                     </PullToRefresh>
                 </div>
             </main>
-            <NavBar navList={navList} />
+            <NavBar navList={navList} page="home" />
             {
                 alerts.length > 0 ?
                                 <div className="fixed top-[0%] h-[100vh] w-[100vw]">{alerts_render}</div>:

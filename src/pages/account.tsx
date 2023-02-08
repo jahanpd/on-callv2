@@ -200,7 +200,7 @@ const Account = ({ initialSession, user }: Props) => {
 
                 </div>
             </main>
-            <NavBar navList={navList}/>
+            <NavBar navList={navList} page="other"/>
             {
                 alerts.length > 0 ?
                 <div className="fixed top-[0%] h-[100vh] w-[100vw]">{alerts_render}</div>:

@@ -28,17 +28,26 @@ export interface State {
     filterLocal?: Filter;
 }
 
+export interface Notes {
+  id: string
+  noteId: string
+  note: string
+  timestamp: number
+}
+
 export class MySubClassedDexie extends Dexie {
   // 'friends' is added by dexie when declaring the stores()
   // We just tell the typing system this is the case
   cards!: Table<Card>;
   state!: Table<State>;
+  notes!: Table<Notes>;
 
   constructor() {
     super('database');
     this.version(2).stores({
       cards: '++id, uid, cardId, name, urn, dob, timestamp, content, summary, status', // Primary key and indexed props
-      state: '++id, uid, device, lastSync, seedPhrase, lookback, filterLocal' // Primary key and indexed props
+      state: '++id, uid, device, lastSync, seedPhrase, lookback, filterLocal', // Primary key and indexed props
+      notes: "++id, noteId"
     });
   }
 }

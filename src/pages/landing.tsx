@@ -32,7 +32,7 @@ const LandingPage: NextPage = () => {
                     </div>
                 </div>
             </main>
-            <NavBar navList={navList}/>
+            <NavBar navList={navList} page="other"/>
         </>
     );
 }

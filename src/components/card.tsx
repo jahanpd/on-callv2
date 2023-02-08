@@ -140,7 +140,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
 
     const openHeader = (
         <div className={``}>
-            <div className={`text-white p-2 flex flex-row items-center`}>
+            <div className={`text-white p-2 flex flex-row items-center flex-wrap`}>
                 <h3 className="min-w-[80px] pr-4 py-1 font-bold urn-placeholder"
                     contentEditable
                     onInput={handleUrnEdit}
@@ -153,13 +153,15 @@ const Card = ({ card, selected, setSelected }: Props) => {
                 >
                     {card.name ? card.name : ""}
                 </h3>
-                <p className="text-white/70 font-bold pr-2">DOB: </p>
-                <div className="mr-2">
-                    <DatePicker
-                        value={card.dob ? new Date(card.dob) : null}
-                        onChange={(date: Date) => { handleDobEdit(date) }}
-                        disableCalendar={true}
-                    />
+                <div className="flex flex-row items-center pt-2 sm:pl-5 sm:pt-0">
+                    <p className="text-white/70 font-bold pr-2">DOB: </p>
+                    <div className="mr-2">
+                        <DatePicker
+                            value={card.dob ? new Date(card.dob) : null}
+                            onChange={(date: Date) => { handleDobEdit(date) }}
+                            disableCalendar={true}
+                        />
+                    </div>
                 </div>
                 {
                     card.dob
