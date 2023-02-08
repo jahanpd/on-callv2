@@ -29,7 +29,8 @@ export interface State {
 }
 
 export interface Notes {
-  id: string
+  id?: number
+  uid: string
   noteId: string
   note: string
   timestamp: number
@@ -45,9 +46,9 @@ export class MySubClassedDexie extends Dexie {
   constructor() {
     super('database');
     this.version(2).stores({
-      cards: '++id, uid, cardId, name, urn, dob, timestamp, content, summary, status', // Primary key and indexed props
-      state: '++id, uid, device, lastSync, seedPhrase, lookback, filterLocal', // Primary key and indexed props
-      notes: "++id, noteId"
+      cards: '++id, uid, cardId, name, urn, dob, status', // Primary key and indexed props
+      state: '++id, uid', // Primary key and indexed props
+      notes: "++id, uid, noteId"
     });
   }
 }

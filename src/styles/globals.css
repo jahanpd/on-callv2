@@ -19,3 +19,7 @@
     content: "enter story";
     opacity: 0.6;
 }
+.note-placeholder[contentEditable=true]:empty:before {
+    content: "enter a note or task and press enter";
+    opacity: 0.6;
+}
