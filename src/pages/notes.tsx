@@ -101,7 +101,7 @@ const NotePage = ({ initialSession, user }: Props) => {
                     <div className="flex w-full flex-row items-center">
                         <textarea
                             className="text-white bg-white/10 w-full px-2 p-2 italic max-h-[100px] overflow-auto text-[1rem]"
-                            placeholder="enter a note or task and press enter"
+                            placeholder="write a note or task and press enter"
                             onKeyDown={(e) => {if (e.key == "Enter") { void handleEnter() }}}
                             value={input}
                             onChange={e => setInput(e.target.value.replace("\n", ""))}
