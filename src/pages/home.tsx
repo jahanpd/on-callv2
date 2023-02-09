@@ -34,7 +34,7 @@ import {
     MenuItem,
     Button,
 } from "@material-tailwind/react";
-import { deleteCard } from "../supabase-helper"
+import { deleteCard, setDeleted } from "../supabase-helper"
 import { checkDataSync } from "../checks-and-balance";
 import PullToRefresh from 'react-simple-pull-to-refresh';
 
@@ -254,15 +254,19 @@ const HomePage = ({ initialSession, user }: Props) => {
                 if (!c) return
                 await db.cards.where("cardId").equals(c.cardId).delete();
                 // delete from supabase
-
-                const msg = await deleteCard(supabaseClient, user, c.cardId)
-                if (!msg) {
+                const msg1 = await deleteCard(supabaseClient, user, c.cardId)
+                if (!msg1) {
                     alerts.push(
                         {alert: Alerts.supabaseDeleteFail, timestamp:Date.now()}
                     )
                     setAlerts(alerts)
                     forceUpdate()
-                } else if (msg > 1) {
+                } else if (msg1 > 1) {
+                    const msg2 = await setDeleted(supabaseClient, {
+                        uid: user.id,
+                        cardId: c.cardId,
+                        timestamp: Date.now()
+                    })
                     alerts.push(
                         {alert: Alerts.supabaseDeleteSuccess, timestamp:Date.now()}
                     )

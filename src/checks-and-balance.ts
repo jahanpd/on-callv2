@@ -4,7 +4,7 @@ import type { db as DbDexie, Card } from "./database.config";
 import type { ContextType } from 'react';
 import type AppContext from "./AppContext";
 import { SeedError, SyncError } from "./types";
-import { getSupabaseUserState, getCardsFromIds,
+import { getSupabaseUserState, getCardsFromIds, getDeleted, deleteDeleted,
          getCardInfoAfterTimestamp, setCards, setSupabaseUserState } from "./supabase-helper";
 import AES from 'crypto-js/aes';
 import { SHA1, SHA3, enc } from 'crypto-js'
@@ -81,7 +81,31 @@ export const checkDataSync = async (
     const seedPhrase = state?.seedPhrase
     const supaState = await getSupabaseUserState(supabase, user);
     if (!supaState) return SyncError.noSupaState
+    const localCardsPreCheck = await db.cards.where("uid").equals(user.id).toArray();
+    const supaDeleted = await getDeleted(
+        supabase,
+        user,
+    )
+    if (!supaDeleted) return SyncError.noSupaState
+    // delete localCard if in supaDeleted
+    for (const c of localCardsPreCheck) {
+        if (supaDeleted.map(ca => ca.cardId).includes(c.cardId)) {
+            await db.cards.where({uid:user.id, cardId:c.cardId}).delete()
+        }
+    }
     const localCards = await db.cards.where("uid").equals(user.id).toArray();
+
+    // delete supDelete if > 60 days old
+    for (const dc of supaDeleted) {
+        if (Date.now() - dc.timestamp > 60*24*60*60*1000) {
+            await deleteDeleted(
+                supabase,
+                user,
+                dc.cardId
+            )
+        }
+    }
+
     if (!localCards) return SyncError.getError
     const lastSync: Date | null = state?.lastSync ? new Date(state.lastSync) : null // timestamp of last sync
     const supaLastSync: Date | null = supaState?.lastSync ? new Date(supaState?.lastSync) : null
@@ -146,6 +170,8 @@ export const checkDataSync = async (
         }) // cards on server not local
         .filter(c => c.ret)
         .map(c => c.c)
+  //
+  // TODO implement a deleted database on supabse to cross reference deletes and sync deletes across devices
 
     if (download.length > 0) {
         const newSupaCards = await getCardsFromIds(

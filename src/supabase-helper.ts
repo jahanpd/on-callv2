@@ -31,6 +31,76 @@ export const deleteCard = async(
     }
 }
 
+export const getDeleted = async (
+    supabase: SupabaseClient<Database>,
+    user: User,
+) => {
+    try {
+        const { data, error, status } = await supabase
+        .from('delete_cache')
+        .select("cardId, timestamp")
+        .eq('uid', user.id)
+
+        if (error && status !== 406) {
+        throw error
+        }
+
+        if (data) {
+            const output: Array<{ cardId: string, timestamp: number }> = data
+            return output
+        }
+
+    } catch (error) {
+        console.log('Error retrieving deleted cards')
+        console.log(error)
+    }
+}
+
+export const setDeleted = async (
+    supabase: SupabaseClient<Database>,
+    update: {uid: string, cardId: string, timestamp: number}
+) => {
+    try {
+
+        const { error } = await supabase.from('delete_cache').upsert(update)
+
+        if (error) throw error
+
+        console.log('Delete cache updated!')
+
+    } catch (error) {
+        console.log('Error updating delete cache!')
+        console.log(error)
+      return error
+    }
+}
+
+export const deleteDeleted = async(
+    supabase: SupabaseClient<Database>,
+    user: User,
+    cardId: string
+) => {
+    try {
+        const { count, error, status } = await supabase
+        .from('delete_cache')
+        .delete({ count: "estimated"})
+        .eq('uid', user.id)
+        .eq('cardId', cardId)
+
+        if (error) {
+        throw error
+        }
+
+        return count ? count + 1 : 1
+
+    } catch (error) {
+        console.log('Error deleting card')
+        console.log(error)
+    }
+}
+
+
+
 export const getCardsFromIds = async (
     supabase: SupabaseClient<Database>,
     user: User,
