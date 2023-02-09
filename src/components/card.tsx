@@ -185,7 +185,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
         <div className={`bg-white/10 max-w-[650px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`}>
             {openCard ? <>{openHeader}</> : <>{closedHeader}</>}
 
-            <div className={`${openCard ? "h-fit" : "h-0 invisible"} rounded-lg`}>
+            <div className={`overflow-hidden transition-[max-height] duration-500 ease-in ${openCard ? "max-h-[500px]" : "max-h-0"} rounded-lg`}>
                 <div className="text-white w-full h-[150px] px-2 pb-3 pt-2 content-placeholder overflow-auto"
                     contentEditable
                     onInput={handleContentEdit}
