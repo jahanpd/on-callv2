@@ -26,6 +26,7 @@ export type Filter = {
      from: Date;
      to: Date;
      urn: string;
+     lastUse: number;
  }
 
 export const Alerts = {

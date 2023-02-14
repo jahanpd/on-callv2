@@ -37,7 +37,7 @@ import {
 import { deleteCard, setDeleted } from "../supabase-helper"
 import { checkDataSync } from "../checks-and-balance";
 import PullToRefresh from 'react-simple-pull-to-refresh';
-import { exportPdf, exportCsv } from '../export-helpers';
+import { exportPdf, exportCsv, exportClipboard } from '../export-helpers';
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const supabase = createServerSupabaseClient(context);
@@ -123,13 +123,13 @@ const HomePage = ({ initialSession, user }: Props) => {
         }
     }
 
-
     // DEFINE STATE VARIABLES HERE
     const initFilter: FilterType = {
         status: options.filter((o) => o.value == Status.Pending || o.value == Status.Transfer || Status.Admitted || Status.Seen),
         from: new Date(Date.now() - (1*24*60*60*1000)),
         to: new Date(Date.now() + (1*24*60*60*1000)),
         urn: "",
+        lastUse: 0
     }
     const [filter, setFilter]: [FilterType, Dispatch<SetStateAction<FilterType>>] = useState(initFilter);
     const [filterOpen, setFilterOpen] = useState(0);
@@ -165,10 +165,6 @@ const HomePage = ({ initialSession, user }: Props) => {
     const sortFn = (a: CardType, b: CardType) => {return b.timestamp - a.timestamp;}
     userCards.sort(sortFn);
 
-    navigator.onLine
-    if (filter != userState?.filterLocal) {
-        if (userState?.filterLocal) {setFilter(userState?.filterLocal)}
-    }
 
     // save filter to localdb
     const storeFilterLocal = () => {
@@ -184,6 +180,21 @@ const HomePage = ({ initialSession, user }: Props) => {
         void (async () => await db.state.where("id").equals(user.id).modify(
             {filterLocal: reset}
         ))();
+    }
+
+    if (filter != userState?.filterLocal) {
+        if (userState?.filterLocal) {
+            if (userState.filterLocal.lastUse) {
+                // check if lastUse more than 8 hours ago
+                if (Date.now() - userState.filterLocal.lastUse > 24*60*60*1000) {
+                    initFilter.lastUse = Date.now()
+                    resetFilter()
+                }
+            } else {
+                userState.filterLocal.lastUse = Date.now()
+            }
+            setFilter(userState?.filterLocal)
+        }
     }
 
     // handlers for time range change
@@ -348,6 +359,9 @@ const HomePage = ({ initialSession, user }: Props) => {
                     </MenuItem>
                     <MenuItem className="text-center" onClick={() => exportCsv(cardsDisplayFilter)}>
                         Export Current to CSV
+                    </MenuItem>
+                    <MenuItem className="text-center" onClick={() => void exportClipboard(cardsDisplayFilter)}>
+                        Copy Summary to Clipboard
                     </MenuItem>
                 </MenuList>
             </Menu>

@@ -26,7 +26,7 @@ export const exportPdf = (
     ]
 
     doc.table(10, 10, result, headers, {autoSize: false})
-    doc.output('dataurlnewwindow')
+    window.open(doc.output('bloburl'), "_blank")
 }
 
 export const exportCsv = (
@@ -39,4 +39,13 @@ export const exportCsv = (
         ).join("\n");
     const encodedUri = encodeURI(csvContent);
     window.open(encodedUri);
+}
+
+export const exportClipboard = async (
+    cards: Array<Card>
+) => {
+    const output = cards.map(
+        c => `${c.urn ? c.urn.trim() : ""} ${c.name ? c.name.trim() : ""}: ${c.summary ? c.summary.trim() : ""}`
+    ).join("\n");
+    await navigator.clipboard.writeText(output);
 }
