@@ -26,5 +26,17 @@ export const exportPdf = (
     ]
 
     doc.table(10, 10, result, headers, {autoSize: false})
-    doc.save()
+    doc.output('dataurlnewwindow')
+}
+
+export const exportCsv = (
+    cards: Array<Card>
+) => {
+    const csvContent = "data:text/csv;charset=utf-8,"
+        + "urn,name,dob,summary,content\n"
+        + cards.map(
+            c => `${c.urn ? c.urn.trim() : ""},${c.name ? c.name.trim() : ""},${c.dob ? new Date(c.dob).toDateString() : ""},${c.summary ? c.summary.trim() : ""},${c.content.trim()}`
+        ).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    window.open(encodedUri);
 }

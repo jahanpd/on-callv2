@@ -37,7 +37,7 @@ import {
 import { deleteCard, setDeleted } from "../supabase-helper"
 import { checkDataSync } from "../checks-and-balance";
 import PullToRefresh from 'react-simple-pull-to-refresh';
-import { exportPdf } from '../export-helpers';
+import { exportPdf, exportCsv } from '../export-helpers';
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const supabase = createServerSupabaseClient(context);
@@ -346,8 +346,8 @@ const HomePage = ({ initialSession, user }: Props) => {
                     <MenuItem className="text-center" onClick={() => exportPdf(cardsDisplayFilter)}>
                         Export Current to PDF
                     </MenuItem>
-                    <MenuItem className="text-center">
-                        Export Current to CSV (coming soon)
+                    <MenuItem className="text-center" onClick={() => exportCsv(cardsDisplayFilter)}>
+                        Export Current to CSV
                     </MenuItem>
                 </MenuList>
             </Menu>
