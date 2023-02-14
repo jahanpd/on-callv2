@@ -37,6 +37,7 @@ import {
 import { deleteCard, setDeleted } from "../supabase-helper"
 import { checkDataSync } from "../checks-and-balance";
 import PullToRefresh from 'react-simple-pull-to-refresh';
+import { exportPdf } from '../export-helpers';
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const supabase = createServerSupabaseClient(context);
@@ -304,7 +305,7 @@ const HomePage = ({ initialSession, user }: Props) => {
         return urnFilt || nameFilt
     }
     // filter and sort cards
-    const cardsDisplay = userCards
+    const cardsDisplayFilter = userCards
         .filter((c) => {
             return (
                 filter.status.map(s => s.value.toString()).includes(c.status) &&
@@ -313,6 +314,7 @@ const HomePage = ({ initialSession, user }: Props) => {
                 filterUrnName(c.urn, c.name, filter.urn)
             )
         })
+    const cardsDisplay = cardsDisplayFilter
         .map((c, i) => {
             return (
                 <Card key={i} card={c} selected={selected} setSelected={setSelected}/>
@@ -341,8 +343,8 @@ const HomePage = ({ initialSession, user }: Props) => {
                     <MenuItem className="text-center" onClick={() => void syncWithDatabase()}>
                         Sync with DB
                     </MenuItem>
-                    <MenuItem className="text-center">
-                        Export Current to PDF (coming soon)
+                    <MenuItem className="text-center" onClick={() => exportPdf(cardsDisplayFilter)}>
+                        Export Current to PDF
                     </MenuItem>
                     <MenuItem className="text-center">
                         Export Current to CSV (coming soon)

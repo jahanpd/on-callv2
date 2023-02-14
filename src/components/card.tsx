@@ -182,7 +182,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
     )
 
     const newCardJSX = (
-        <div className={`bg-white/10 max-w-[650px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`}>
+        <div className={`bg-white/10 max-w-[800px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`}>
             {openCard ? <>{openHeader}</> : <>{closedHeader}</>}
 
             <div className={`overflow-hidden transition-[max-height] duration-500 ease-in ${openCard ? "max-h-[500px]" : "max-h-0"} rounded-lg`}>
