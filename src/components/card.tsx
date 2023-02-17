@@ -1,23 +1,16 @@
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import { useRouter } from 'next/router';
 import { useUser } from '@supabase/auth-helpers-react';
 import { Status, SyncError, Alerts } from '../types';
 import type { SetStateAction, Dispatch } from "react";
-import type { MouseEventHandler, ChangeEventHandler } from "react";
+import type { ChangeEventHandler } from "react";
 import { useState, useContext } from 'react';
 import { getOffsetTimeString } from '../pages/home';
-import { Select, Option, Alert } from "@material-tailwind/react";
+import Select from 'react-select'
 import DatePicker from 'react-date-picker/dist/entry.nostyle';
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import {
-    Card as CardUI,
-    CardHeader,
-    CardBody,
-    CardFooter,
-    Typography,
     IconButton,
-    Input
 } from "@material-tailwind/react";
 import { db, type Card as CardType } from "../database.config";
 import { checkDataSync } from "../checks-and-balance";
@@ -57,13 +50,15 @@ const Card = ({ card, selected, setSelected }: Props) => {
         })()
     };
 
-    const optionsStatus = []
+    const options = []
     let k: keyof typeof Status;
     for (k in Status) {
-        optionsStatus.push(
-            <Option value={k.toString()} >{k}</Option>
-        )
+        options.push({
+            value: Status[k],
+            label: Status[k]
+        })
     }
+    console.log("OPTIONS", options)
 
     // handlers
     const handleUrnEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -118,6 +113,19 @@ const Card = ({ card, selected, setSelected }: Props) => {
                                             card.status == Status.Transfer ? "cyan-500" : "white"
 
 
+    const selectStyles = {
+    valueContainer: () => ({
+        padding: 10,
+        display: "flex",
+        alignItems: "center"
+    }),
+    menu: () => ({
+            zIndex: 50,
+            position: "fixed",
+            backgroundColor: "#fff"
+        }),
+    }
+
     const closedHeader = (
         <div onClick={selectCard}>
             <div className={`text-white/70 p-2 flex flex-row items-center`}>
@@ -125,8 +133,8 @@ const Card = ({ card, selected, setSelected }: Props) => {
                 <h3 className="min-w-max pr-4 py-1 font-bold"> {card.name ? card.name : "UNNAMED"} </h3>
                 {
                     card.dob
-                    ? <h3 className="min-w-max py-1 pr-4 font-bold" contentEditable> {card.dob ? Math.floor((Date.now() - new Date(card.dob).getTime()) / 3.15576e+10).toString() + "yo": ""} </h3>
-                    : ""
+                        ? <h3 className="min-w-max py-1 pr-4 font-bold" contentEditable> {card.dob ? Math.floor((Date.now() - new Date(card.dob).getTime()) / 3.15576e+10).toString() + "yo" : ""} </h3>
+                        : ""
                 }
                 <div className="w-full"></div>
                 <p className="min-w-max py-1 text-[0.5rem]"> {getOffsetTimeString(new Date(card.timestamp))} </p>
@@ -169,7 +177,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
                         : ""
                 }
             </div>
-            <div className="text-white bg-white/10 w-full px-2 p-2 italic summary-placeholder"
+            <div className="text-white bg-white/10 w-full px-2 p-2 italic summary-placeholder whitespace-pre-wrap"
                 contentEditable
                 onInput={handleSummaryEdit}
             >
@@ -185,8 +193,8 @@ const Card = ({ card, selected, setSelected }: Props) => {
         <div className={`bg-white/10 max-w-[800px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`}>
             {openCard ? <>{openHeader}</> : <>{closedHeader}</>}
 
-            <div className={`overflow-hidden transition-[max-height] duration-500 ease-in ${openCard ? "max-h-[500px]" : "max-h-0"} rounded-lg`}>
-                <div className="text-white w-full h-[150px] px-2 pb-3 pt-2 content-placeholder overflow-auto"
+            <div className={`${openCard ? "" : "overflow-hidden"} transition-[max-height] duration-500 ease-in ${openCard ? "max-h-[500px]" : "max-h-0"} rounded-lg`}>
+                <div className="text-white w-full h-[150px] px-2 pb-3 pt-2 content-placeholder overflow-auto whitespace-pre-wrap"
                     contentEditable
                     onInput={handleContentEdit}
                 >
@@ -199,13 +207,15 @@ const Card = ({ card, selected, setSelected }: Props) => {
                     <IconButton size="sm" className="w-20" onClick={handleSaveCard}>
                         <i className="fas fa-check text-[1rem]" />
                     </IconButton>
-                    <Select label="status" variant="static"
-                        className="text-white text-[0.8rem] pt-1"
-                        value={card.status?.toString()}
-                        onChange={handleStatusEdit}
-                    >
-                        {optionsStatus}
-                    </Select>
+                    <div className="container">
+                        <Select
+                            placeholder="Progress Status"
+                            options={options}
+                            isClearable={false}
+                            menuPlacement={"top"}
+                            onChange={(e) => {handleStatusEdit(e?.label)}}
+                        />
+                    </div>
                 </div>
             </div>
         </div>

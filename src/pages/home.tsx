@@ -1,6 +1,6 @@
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import type { Database } from '../utils/supabaseTypes';
-import type { MouseEventHandler, ChangeEventHandler} from "react";
+import type { ChangeEventHandler} from "react";
 import type { GetServerSideProps } from 'next';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import type { User, Session } from '@supabase/auth-helpers-react';
