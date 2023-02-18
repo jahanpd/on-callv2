@@ -189,11 +189,25 @@ const Card = ({ card, selected, setSelected }: Props) => {
         </div>
     )
 
+    const getEmpty = () => {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+            resolve('');
+            }, 5000);
+        });
+    }
+    const resolveEmpty = async () => {
+        return await getEmpty()
+    }
+
     const newCardJSX = (
         <div className={`bg-white/10 max-w-[800px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`}>
             {openCard ? <>{openHeader}</> : <>{closedHeader}</>}
 
-            <div className={`${openCard ? "" : "overflow-hidden"} transition-[max-height] duration-500 ease-in ${openCard ? "max-h-[500px]" : "max-h-0"} rounded-lg`}>
+            <div
+                className={`${openCard ? "" : "overflow-hidden"} transition-[max-height] duration-500 ease-in ${openCard ? "max-h-[500px]" : "max-h-0"} rounded-lg`}
+                id="overflowToggle"
+            >
                 <div className="text-white w-full h-[150px] px-2 pb-3 pt-2 content-placeholder overflow-auto whitespace-pre-wrap"
                     contentEditable
                     onInput={handleContentEdit}
@@ -213,7 +227,8 @@ const Card = ({ card, selected, setSelected }: Props) => {
                             options={options}
                             isClearable={false}
                             menuPlacement={"top"}
-                            onChange={(e) => {handleStatusEdit(e?.label)}}
+                            defaultValue={{label: card.status, value:card.status}}
+                            onChange={(e) => { handleStatusEdit(e?.label) }}
                         />
                     </div>
                 </div>
