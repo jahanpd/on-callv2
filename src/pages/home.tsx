@@ -437,12 +437,18 @@ const HomePage = ({ initialSession, user }: Props) => {
                             </div>
                         </AccordionBody>
                     </Accordion>
+                    {selected ?
+                            <div className="grid grid-cols-1 gap-4 justify-items-center">
+                                {cardsDisplay}
+                                <div className="flex flex-col w-full h-[calc(50vh)] items-center"/>
+                            </div> :
                     <PullToRefresh onRefresh={handleRefresh}>
                             <div className="grid grid-cols-1 gap-4 justify-items-center">
                                 {cardsDisplay}
                                 <div className="flex flex-col w-full h-[calc(50vh)] items-center"/>
                             </div>
                     </PullToRefresh>
+                    }
                 </div>
             </main>
             <NavBar navList={navList} page="home" />

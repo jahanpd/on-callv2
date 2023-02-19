@@ -41,6 +41,10 @@ const Card = ({ card, selected, setSelected }: Props) => {
         setSelected(card.cardId);
         setOpenCard(true)
     };
+    const deselectCardSimple = () => {
+        setSelected("");
+        setOpenCard(false)
+    };
     const deselectCard = () => {
         setSelected("");
         setOpenCard(false);
@@ -106,10 +110,10 @@ const Card = ({ card, selected, setSelected }: Props) => {
 
     type borderColourType = "white" | "red-500" | "orange-500" | "green-500" | "cyan-500"
     const borderColour: borderColourType = card.status == Status.Admitted  ||
-                                           card.status == Status.Completed ||
                                             card.status == Status.Discharged  ? "green-500" :
                                             card.status == Status.Pending ? "red-500" :
                                             card.status == Status.Seen ? "orange-500" :
+                                            card.status == Status.Completed ? "white" :
                                             card.status == Status.Transfer ? "cyan-500" : "white"
 
 
@@ -127,7 +131,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
     }
 
     const closedHeader = (
-        <div onClick={selectCard}>
+        <div onClick={selectCard} className="">
             <div className={`text-white/70 p-2 flex flex-row items-center`}>
                 <h3 className="min-w-max pr-4 py-1 font-bold"> {card.urn ? card.urn : "NO UID"} </h3>
                 <h3 className="min-w-max pr-4 py-1 font-bold"> {card.name ? card.name : "UNNAMED"} </h3>
@@ -147,7 +151,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
     )
 
     const openHeader = (
-        <div className={``}>
+        <div className={`h-[140px] sm:h-[100px]`}>
             <div className={`text-white p-2 flex flex-row items-center flex-wrap`}>
                 <h3 className="min-w-[80px] pr-4 py-1 font-bold urn-placeholder"
                     contentEditable
@@ -189,32 +193,27 @@ const Card = ({ card, selected, setSelected }: Props) => {
         </div>
     )
 
-    const getEmpty = () => {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-            resolve('');
-            }, 5000);
-        });
-    }
-    const resolveEmpty = async () => {
-        return await getEmpty()
-    }
+    // TW class strings for open/closed conditions
+    const closedCardStyle = `bg-white/10 max-w-[800px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`
+    const openCardStyle = (`bg-white/10 max-w-[800px] max-h-[800px] w-[calc(90vw)] h-[calc(60vh)] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem] `
+     + `z-50 fixed left-1/2 top-[5%] sm:top-[10%] transform -translate-x-1/2`
+    )
 
     const newCardJSX = (
-        <div className={`bg-white/10 max-w-[800px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`}>
+        <div className={openCard ? openCardStyle : closedCardStyle}>
             {openCard ? <>{openHeader}</> : <>{closedHeader}</>}
 
             <div
-                className={`${openCard ? "" : "overflow-hidden"} transition-[max-height] duration-500 ease-in ${openCard ? "max-h-[500px]" : "max-h-0"} rounded-lg`}
+                className={`${openCard ? "h-full" : "max-h-0 overflow-hidden"} rounded-lg`}
                 id="overflowToggle"
             >
-                <div className="text-white w-full h-[150px] px-2 pb-3 pt-2 content-placeholder overflow-auto whitespace-pre-wrap"
+                <div className="text-white w-full max-h-[calc(60vh-210px)] sm:max-h-[calc(60vh-160px)] h-full px-2 pb-3 pt-2 content-placeholder overflow-auto whitespace-pre-wrap"
                     contentEditable
                     onInput={handleContentEdit}
                 >
                     {card.content ? card.content : ""}
                 </div>
-                <div className="flex flex-row w-full gap-6 bg-white/10 items-center py-2 px-2 h-fit">
+                <div className="flex flex-row w-full gap-6 bg-white/10 items-center py-2 px-2 h-[60px]">
                     <IconButton className="w-20 ml-4" size="sm" color="yellow" onClick={deselectCard}>
                         <i className=" fas fa-ban text-[1rem]" />
                     </IconButton>
@@ -239,6 +238,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
 
     return (
         <>
+            {openCard ? <div className="bg-black/95 fixed top-0 left-0 h-[calc(100vh)] w-[calc(100vw)] z-20" onClick={() => {handleSaveCard(); deselectCardSimple()}}></div> : ""}
             {newCardJSX}
         </>
     )
