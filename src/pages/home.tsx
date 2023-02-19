@@ -229,6 +229,7 @@ const HomePage = ({ initialSession, user }: Props) => {
     setFilterOpen(filterOpen === value ? 0 : value);
     };
 
+    console.log("HOME", selected)
 
     const handleRefresh = async () => {
         await clientRoutine(
@@ -308,7 +309,6 @@ const HomePage = ({ initialSession, user }: Props) => {
 
 
     const filterUrnName = (urn: string | undefined, name: string | undefined, filter: string | undefined) => {
-        console.log("filter", urn, name, filter)
         if (!filter) return true
         if (!urn && !name) return false
         const urnFilt = urn ? filter.includes(urn) : false

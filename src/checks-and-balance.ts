@@ -39,7 +39,6 @@ export const checkSeedHash = async (
     let noPreviousUserState = false;
     if (!supabaseHash) void await (async () => {
         const state = await getSupabaseUserState(supabase, user);
-        console.log("checkSeedHash: check sb state", state)
         noPreviousUserState = state ? false : true
         supabaseHash = state?.seedhash ? state.seedhash : "";
     } )();

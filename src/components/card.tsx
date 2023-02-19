@@ -31,23 +31,26 @@ const Card = ({ card, selected, setSelected }: Props) => {
 
     const supabaseClient = useSupabaseClient<Database>();
     const user = useUser();
-    const [openCard, setOpenCard] = useState(false);
 
-    if (selected !== card.cardId && openCard) {
-        setOpenCard(false)
+    let openCard = false;
+
+    if (selected == card.cardId) {
+        openCard = true;
     }
 
+    console.log("CARD", selected)
     const selectCard = () => {
         setSelected(card.cardId);
-        setOpenCard(true)
+        openCard = true;
+        console.log("CARD", selected, card, openCard )
     };
     const deselectCardSimple = () => {
         setSelected("");
-        setOpenCard(false)
+        openCard = false;
     };
     const deselectCard = () => {
         setSelected("");
-        setOpenCard(false);
+        openCard = false;
         // this causes a rerender of the list to remove changes
         void (async () => {
             await db.cards.where("cardId").equals(card.cardId).modify((c: CardType) => {c.cardId = c.cardId});
@@ -62,7 +65,6 @@ const Card = ({ card, selected, setSelected }: Props) => {
             label: Status[k]
         })
     }
-    console.log("OPTIONS", options)
 
     // handlers
     const handleUrnEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -88,7 +90,6 @@ const Card = ({ card, selected, setSelected }: Props) => {
     if (!user) return null
 
     const handleSaveCard = () => {
-        console.log(card);
         void (async () => {
             card.timestampEdit = Date.now()
             await db.cards.where("cardId").equals(card.cardId).modify(card);
@@ -117,18 +118,6 @@ const Card = ({ card, selected, setSelected }: Props) => {
                                             card.status == Status.Transfer ? "cyan-500" : "white"
 
 
-    const selectStyles = {
-    valueContainer: () => ({
-        padding: 10,
-        display: "flex",
-        alignItems: "center"
-    }),
-    menu: () => ({
-            zIndex: 50,
-            position: "fixed",
-            backgroundColor: "#fff"
-        }),
-    }
 
     const closedHeader = (
         <div onClick={selectCard} className="">
@@ -137,7 +126,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
                 <h3 className="min-w-max pr-4 py-1 font-bold"> {card.name ? card.name : "UNNAMED"} </h3>
                 {
                     card.dob
-                        ? <h3 className="min-w-max py-1 pr-4 font-bold" contentEditable> {card.dob ? Math.floor((Date.now() - new Date(card.dob).getTime()) / 3.15576e+10).toString() + "yo" : ""} </h3>
+                        ? <h3 className="min-w-max py-1 pr-4 font-bold"> {card.dob ? Math.floor((Date.now() - new Date(card.dob).getTime()) / 3.15576e+10).toString() + "yo" : ""} </h3>
                         : ""
                 }
                 <div className="w-full"></div>
@@ -155,12 +144,14 @@ const Card = ({ card, selected, setSelected }: Props) => {
             <div className={`text-white p-2 flex flex-row items-center flex-wrap`}>
                 <h3 className="min-w-[80px] pr-4 py-1 font-bold urn-placeholder"
                     contentEditable
+                    suppressContentEditableWarning={true}
                     onInput={handleUrnEdit}
                 >
                     {card.urn ? card.urn : ""}
                 </h3>
                 <h3 className="min-w-[95px] pr-4 py-1 font-bold name-placeholder"
                     contentEditable
+                    suppressContentEditableWarning={true}
                     onInput={handleNameEdit}
                 >
                     {card.name ? card.name : ""}
@@ -177,18 +168,17 @@ const Card = ({ card, selected, setSelected }: Props) => {
                 </div>
                 {
                     card.dob
-                        ? <h3 className="min-w-max py-1 pr-4 font-bold" contentEditable> {card.dob ? Math.floor((Date.now() - new Date(card.dob).getTime()) / 3.15576e+10).toString() + "yo" : ""} </h3>
+                        ? <h3 className="min-w-max py-1 pr-4 font-bold"> {card.dob ? Math.floor((Date.now() - new Date(card.dob).getTime()) / 3.15576e+10).toString() + "yo" : ""} </h3>
                         : ""
                 }
             </div>
             <div className="text-white bg-white/10 w-full px-2 p-2 italic summary-placeholder whitespace-pre-wrap"
                 contentEditable
+                suppressContentEditableWarning={true}
                 onInput={handleSummaryEdit}
             >
                 {card.summary ? card.summary : ""}
             </div>
-
-
 
         </div>
     )
@@ -209,6 +199,7 @@ const Card = ({ card, selected, setSelected }: Props) => {
             >
                 <div className="text-white w-full max-h-[calc(60vh-210px)] sm:max-h-[calc(60vh-160px)] h-full px-2 pb-3 pt-2 content-placeholder overflow-auto whitespace-pre-wrap"
                     contentEditable
+                    suppressContentEditableWarning={true}
                     onInput={handleContentEdit}
                 >
                     {card.content ? card.content : ""}

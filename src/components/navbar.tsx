@@ -29,7 +29,7 @@ const NavBar = ( {navList, page}: Props ) => {
     const router = useRouter();
 
     return (
-        <Navbar className="!bg-white/10 mx-auto sm:max-w-screen-xl w-[80%] lg:px-8 lg:py-1 fixed top-[90%] sm:top-[93%] left-1/2 transform -translate-x-1/2 -translate-y-[95%]">
+        <Navbar className="!bg-white/10 mx-auto sm:max-w-screen-xl w-[80%] lg:px-8 lg:py-1 fixed top-[90%] sm:top-[93%] left-1/2 transform -translate-x-1/2 -translate-y-[95%] z-[100]">
             <div className="container mx-auto flex items-center justify-between text-blue-gray-900">
                 <Typography
                     as="a"
@@ -133,13 +133,13 @@ const NavBar = ( {navList, page}: Props ) => {
                             {user ?
                              <Link
                                  className = ""
-                                 href="logout"
+                                 href="/logout"
                              >logout
                              </Link>
                             :
                              <Link
                                  className = ""
-                                 href="auth">login
+                                 href="/auth">login
                              </Link>
                             }
                         </div>
