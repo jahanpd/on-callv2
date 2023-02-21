@@ -177,6 +177,15 @@ const HomePage = ({ initialSession, user }: Props) => {
         },
         delay: 100
     })
+    const fadePropsAlt = useSpring({
+        from: {
+            opacity: selected ? 1 : 0,
+        },
+        to: {
+            opacity: selected ? 0 : 1,
+        },
+        delay: 100
+    })
 
     // return null while waiting dexie queries
     if (!userState) return Load
@@ -403,7 +412,7 @@ const HomePage = ({ initialSession, user }: Props) => {
             <Header title="On Call" description="A tool for doctors who are on call and taking referrals"/>
             <main className="flex h-[calc(100vh)] w-[100vw] items-center flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] text-[0.7rem] sm:text-[0.9rem] overflow-auto">
                 <div className = "flex flex-col px-4 w-full overflow-auto h-full items-center">
-                    <Accordion open={filterOpen === 1} className="pb-2 sm:max-w-screen-xl !w-[calc(100vw-20px)] z-20">
+                    <Accordion open={filterOpen === 1} className={`pb-2 sm:max-w-screen-xl !w-[calc(100vw-20px)] z-20 ${selected ? "hidden" : ""}`}>
                         <AccordionHeader onClick={() => handleFilterOpen(1)} className="!text-white !p-2">
                             <div className="flex h-full flex-row">
                                 <h1 className="flex text-[1.5rem] h-max w-full font-extrabold tracking-tight text-white py-2 pl-2 sm:text-[2rem]">

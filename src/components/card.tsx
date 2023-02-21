@@ -196,7 +196,7 @@ const Card = ({ card, selected, setSelected, bgProps }: Props) => {
     // TW class strings for open/closed conditions
     const closedCardStyle = `bg-white/10 max-w-[800px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`
     const openCardStyle = (`bg-gray-800/50 max-w-[800px] max-h-[800px] w-[calc(90vw)] h-[calc(60vh)] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem] `
-     + `z-50 fixed left-1/2 top-[5%] sm:top-[10%] transform -translate-x-1/2`
+     + `z-50 fixed left-1/2 top-[10%] sm:top-[10%] transform -translate-x-1/2`
     )
 
     const newCardJSX = (
@@ -204,7 +204,7 @@ const Card = ({ card, selected, setSelected, bgProps }: Props) => {
             {openCard == "open" ? <>{openHeader}</> : <>{closedHeader}</>}
 
             <div
-                className={`rounded-lg ${openCard == "open" ? "" : "hidden"} h-full`}
+                className={`rounded-lg ${openCard == "open" ? "" : "hidden"} h-[calc(40vh)]`}
             >
                 <div className="text-white w-full max-h-[calc(60vh-210px)] sm:max-h-[calc(60vh-160px)] h-full px-2 pb-3 pt-2 content-placeholder overflow-auto whitespace-pre-wrap"
                     contentEditable
