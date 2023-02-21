@@ -39,6 +39,9 @@ import { checkDataSync } from "../checks-and-balance";
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { exportPdf, exportCsv, exportClipboard } from '../export-helpers';
 
+import { useSpring, animated } from '@react-spring/web';
+
+
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const supabase = createServerSupabaseClient(context);
     const {
@@ -157,6 +160,23 @@ const HomePage = ({ initialSession, user }: Props) => {
         })()
     }, [userState?.seedPhrase, userState?.id])
 
+    // handle animating background on card open/close
+    const bgProps = useSpring({
+        from: { opacity: selected ? 0 : 0.8,
+        },
+        to: {
+            opacity: selected ? 0.8 : 0,
+        },
+    })
+    const fadeProps = useSpring({
+        from: {
+            opacity: selected ? 0 : 1,
+        },
+        to: {
+            opacity: selected ? 1 : 0,
+        },
+        delay: 100
+    })
 
     // return null while waiting dexie queries
     if (!userState) return Load
@@ -328,9 +348,13 @@ const HomePage = ({ initialSession, user }: Props) => {
     const cardsDisplay = cardsDisplayFilter
         .map((c, i) => {
             return (
-                <Card key={i} card={c} selected={selected} setSelected={setSelected}/>
+                <Card key={i} card={c} selected={selected} setSelected={setSelected} bgProps={bgProps} />
             )
         })
+
+    const selectedCard = userCards
+        .filter((c) => c.cardId == selected)
+
     console.log("visualise usercards", userCards)
     console.log("visualise usercards", cardsDisplay)
 
@@ -338,6 +362,7 @@ const HomePage = ({ initialSession, user }: Props) => {
     const alerts_render = alerts.map(
         (a: {alert: Alerts | SeedError | SyncError, timestamp: number}, idx) => {return (<Alert key={idx} alertcontent={a.alert} alerts={alerts} setAlerts={setAlerts} force={forceUpdate}/>)}
     )
+
 
     // generate navlist for this page
     const navList = (
@@ -378,7 +403,7 @@ const HomePage = ({ initialSession, user }: Props) => {
             <Header title="On Call" description="A tool for doctors who are on call and taking referrals"/>
             <main className="flex h-[calc(100vh)] w-[100vw] items-center flex-col bg-gradient-to-b from-[#2e026d] to-[#15162c] text-[0.7rem] sm:text-[0.9rem] overflow-auto">
                 <div className = "flex flex-col px-4 w-full overflow-auto h-full items-center">
-                    <Accordion open={filterOpen === 1} className="pb-2 sm:max-w-screen-xl !w-[calc(100vw-20px)]">
+                    <Accordion open={filterOpen === 1} className="pb-2 sm:max-w-screen-xl !w-[calc(100vw-20px)] z-20">
                         <AccordionHeader onClick={() => handleFilterOpen(1)} className="!text-white !p-2">
                             <div className="flex h-full flex-row">
                                 <h1 className="flex text-[1.5rem] h-max w-full font-extrabold tracking-tight text-white py-2 pl-2 sm:text-[2rem]">
@@ -437,11 +462,16 @@ const HomePage = ({ initialSession, user }: Props) => {
                             </div>
                         </AccordionBody>
                     </Accordion>
-                    {selected ?
-                            <div className="grid grid-cols-1 gap-4 justify-items-center">
-                                {cardsDisplay}
-                                <div className="flex flex-col w-full h-[calc(50vh)] items-center"/>
-                            </div> :
+                    {!selected ?
+                    <animated.div
+                        className="bg-black fixed top-0 left-0 h-[calc(100vh)] w-[calc(100vw)]"
+                        style={bgProps} /> :
+                     ""
+                    }
+                    {selectedCard[0] ?
+                     <animated.div style={fadeProps}>
+                        <Card card={selectedCard[0]} selected={selected} setSelected={setSelected} bgProps={bgProps} />
+                     </animated.div> :
                     <PullToRefresh onRefresh={handleRefresh}>
                             <div className="grid grid-cols-1 gap-4 justify-items-center">
                                 {cardsDisplay}

@@ -17,13 +17,17 @@ import { checkDataSync } from "../checks-and-balance";
 import type { Database } from '../utils/supabaseTypes';
 import AppContext from "../AppContext";
 
+import { useSpring, animated, SpringValue } from '@react-spring/web';
+
+
 type Props = {
     card: CardType
     selected: string
-    setSelected: Dispatch<SetStateAction<string>>
+    setSelected: Dispatch<SetStateAction<string>>,
+    bgProps: { opacity: SpringValue<number> }
 }
 
-const Card = ({ card, selected, setSelected }: Props) => {
+const Card = ({ card, selected, setSelected, bgProps }: Props) => {
 
     const value = useContext(AppContext);
     const alerts = value ? value.state.alerts : [];
@@ -32,25 +36,31 @@ const Card = ({ card, selected, setSelected }: Props) => {
     const supabaseClient = useSupabaseClient<Database>();
     const user = useUser();
 
-    let openCard = false;
+    const [openCard, setOpenCard] = useState("");
+    /* let openCard: "open" | "closed" | null = null; */
 
-    if (selected == card.cardId) {
-        openCard = true;
+    if (selected == card.cardId && !openCard) {
+        setOpenCard("open");
+    } else if (selected != card.cardId && !openCard) {
+        setOpenCard("closed")
     }
 
-    console.log("CARD", selected)
+    console.log("CARD, CHECK SELECTED", selected)
     const selectCard = () => {
         setSelected(card.cardId);
-        openCard = true;
-        console.log("CARD", selected, card, openCard )
+        /* openCard = "open"; */
+        setOpenCard("open");
+        console.log("CARD", selected, card.cardId, openCard )
     };
     const deselectCardSimple = () => {
         setSelected("");
-        openCard = false;
+        /* openCard = "closed"; */
+        setOpenCard("closed");
     };
     const deselectCard = () => {
         setSelected("");
-        openCard = false;
+        /* openCard = "closed"; */
+        setOpenCard("open");
         // this causes a rerender of the list to remove changes
         void (async () => {
             await db.cards.where("cardId").equals(card.cardId).modify((c: CardType) => {c.cardId = c.cardId});
@@ -87,9 +97,9 @@ const Card = ({ card, selected, setSelected }: Props) => {
         card.status = newStatus;
     }
 
-    if (!user) return null
 
     const handleSaveCard = () => {
+        if (!user) return null
         void (async () => {
             card.timestampEdit = Date.now()
             await db.cards.where("cardId").equals(card.cardId).modify(card);
@@ -185,17 +195,16 @@ const Card = ({ card, selected, setSelected }: Props) => {
 
     // TW class strings for open/closed conditions
     const closedCardStyle = `bg-white/10 max-w-[800px] h-min w-[calc(90vw)] min-h-[20px] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem]`
-    const openCardStyle = (`bg-white/10 max-w-[800px] max-h-[800px] w-[calc(90vw)] h-[calc(60vh)] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem] `
+    const openCardStyle = (`bg-gray-800/50 max-w-[800px] max-h-[800px] w-[calc(90vw)] h-[calc(60vh)] rounded-lg border-2 border-${borderColour} text-[0.85rem] sm:text=[1rem] `
      + `z-50 fixed left-1/2 top-[5%] sm:top-[10%] transform -translate-x-1/2`
     )
 
     const newCardJSX = (
-        <div className={openCard ? openCardStyle : closedCardStyle}>
-            {openCard ? <>{openHeader}</> : <>{closedHeader}</>}
+        <div className={openCard == "open" ? openCardStyle : closedCardStyle}>
+            {openCard == "open" ? <>{openHeader}</> : <>{closedHeader}</>}
 
             <div
-                className={`${openCard ? "h-full" : "max-h-0 overflow-hidden"} rounded-lg`}
-                id="overflowToggle"
+                className={`rounded-lg ${openCard == "open" ? "" : "hidden"} h-full`}
             >
                 <div className="text-white w-full max-h-[calc(60vh-210px)] sm:max-h-[calc(60vh-160px)] h-full px-2 pb-3 pt-2 content-placeholder overflow-auto whitespace-pre-wrap"
                     contentEditable
@@ -204,7 +213,9 @@ const Card = ({ card, selected, setSelected }: Props) => {
                 >
                     {card.content ? card.content : ""}
                 </div>
-                <div className="flex flex-row w-full gap-6 bg-white/10 items-center py-2 px-2 h-[60px]">
+                <div
+                    className="flex flex-row w-full gap-6 bg-white/10 items-center py-2 px-2 h-[60px]"
+                >
                     <IconButton className="w-20 ml-4" size="sm" color="yellow" onClick={deselectCard}>
                         <i className=" fas fa-ban text-[1rem]" />
                     </IconButton>
@@ -229,7 +240,14 @@ const Card = ({ card, selected, setSelected }: Props) => {
 
     return (
         <>
-            {openCard ? <div className="bg-black/95 fixed top-0 left-0 h-[calc(100vh)] w-[calc(100vw)] z-20" onClick={() => {handleSaveCard(); deselectCardSimple()}}></div> : ""}
+            {
+                selected == card.cardId ?
+            <animated.div
+                className="bg-black fixed top-0 left-0 h-[calc(100vh)] w-[calc(100vw)]"
+                onClick={() => {handleSaveCard(); deselectCardSimple()}}
+                style={bgProps} /> :
+                ""
+            }
             {newCardJSX}
         </>
     )
