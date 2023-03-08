@@ -289,6 +289,9 @@ const HomePage = ({ initialSession, user }: Props) => {
         await db.cards.add(newCard);
         setSelected(newCard.cardId);
         forceUpdate();
+        filter.to = new Date(Date.now());
+        setFilter(filter);
+        storeFilterLocal();
     }
 
     async function deleteSelected() {
