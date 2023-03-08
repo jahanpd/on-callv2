@@ -13,7 +13,7 @@ import { Alerts, SeedError, SyncError } from '../types';
 import { clientRoutine } from '../checks-and-balance';
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../database.config";
+import { db, type State } from "../database.config";
 
 import { useState, useContext, useCallback, useEffect} from 'react';
 
@@ -30,10 +30,12 @@ export async function getServerSideProps(context: GetServerSidePropsContext<any,
           permanent: false,
       },
     }
+    // TODO get userstate from supabase
     return {
         props: {
             initialSession: session,
             user: session.user,
+            userStateServer: undefined,
         },
     }
 }
@@ -41,9 +43,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext<any,
 type Props = {
     initialSession: Session,
     user: User
+    userStateServer: undefined | State
 }
 
-const Account = ({ initialSession, user }: Props) => {
+const Account = ({ initialSession, user, userStateServer }: Props) => {
     const value = useContext(AppContext);
     const alerts = value ? value.state.alerts : [];
     const setAlerts = value ? value.setAlerts : () => {[]};
@@ -56,7 +59,7 @@ const Account = ({ initialSession, user }: Props) => {
 
 
     // GET PREVIOUS VALUES FROM INDEXEDDB STORE
-    const userState = useLiveQuery(
+    const userState: State | undefined = useLiveQuery(
         async () => db.state
         .where("id")
         .equals(user.id)
@@ -87,7 +90,15 @@ const Account = ({ initialSession, user }: Props) => {
     // if not userState, initialize one
     if (!userState) return Load
 
+    // override userState with userStateServer if different
+    if (userStateServer) {
+        if (userStateServer != userState) {
+            void (async () => await db.state.where("id").equals(user.id).modify(userStateServer))();
+        }
+    }
+
     // SET STATE HANDLERS
+    // TODO PUSH STATE TO SUPABASE ON CHANGE OR SAVE
 
     const handleSeedEdit: ChangeEventHandler<HTMLInputElement> = (e) => {
         seedPhraseEditTemp = e.target.innerText

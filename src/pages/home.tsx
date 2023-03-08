@@ -157,7 +157,9 @@ const HomePage = ({ initialSession, user }: Props) => {
                     console.log("Internet likely not connected")
                 }
             }
+            document.getElementById("cardWrapper")?.focus();
         })()
+
     }, [userState?.seedPhrase, userState?.id])
 
     // handle animating background on card open/close
@@ -295,6 +297,7 @@ const HomePage = ({ initialSession, user }: Props) => {
             if (c.cardId == selected) {
                 if (!c) return
                 await db.cards.where("cardId").equals(c.cardId).delete();
+                setSelected("")
                 // delete from supabase
                 const msg1 = await deleteCard(supabaseClient, user, c.cardId)
                 if (!msg1) {
@@ -382,21 +385,31 @@ const HomePage = ({ initialSession, user }: Props) => {
                     <Button className="bg-[hsl(280,100%,70%)]">actions</Button>
                 </MenuHandler>
                 <MenuList className="bg-white">
-                    <MenuItem className="text-center" onClick={() => void deleteSelected()}>
-                        Delete Selected Card
-                    </MenuItem>
+                    { selected ?
+                        <MenuItem className="text-center" onClick={() => void deleteSelected()}>
+                            Delete Selected Card
+                        </MenuItem> : ""
+                    }
+                    { !selected ?
                     <MenuItem className="text-center" onClick={() => void syncWithDatabase()}>
                         Sync with DB
-                    </MenuItem>
+                    </MenuItem> : ""
+                    }
+                    { !selected ?
                     <MenuItem className="text-center" onClick={() => exportPdf(cardsDisplayFilter)}>
                         Export Current to PDF
-                    </MenuItem>
+                    </MenuItem> : ""
+                    }
+                    { !selected ?
                     <MenuItem className="text-center" onClick={() => exportCsv(cardsDisplayFilter)}>
                         Export Current to CSV
-                    </MenuItem>
+                    </MenuItem> : ""
+                    }
+                    { !selected ?
                     <MenuItem className="text-center" onClick={() => void exportClipboard(cardsDisplayFilter)}>
                         Copy Summary to Clipboard
-                    </MenuItem>
+                    </MenuItem> : ""
+                    }
                 </MenuList>
             </Menu>
         </li>
@@ -482,7 +495,7 @@ const HomePage = ({ initialSession, user }: Props) => {
                         <Card card={selectedCard[0]} selected={selected} setSelected={setSelected} bgProps={bgProps} />
                      </animated.div> :
                     <PullToRefresh onRefresh={handleRefresh}>
-                            <div className="grid grid-cols-1 gap-4 justify-items-center">
+                            <div id="cardsWrapper" className="grid grid-cols-1 gap-4 justify-items-center">
                                 {cardsDisplay}
                                 <div className="flex flex-col w-full h-[calc(50vh)] items-center"/>
                             </div>
@@ -493,7 +506,7 @@ const HomePage = ({ initialSession, user }: Props) => {
             <NavBar navList={navList} page="home" />
             {
                 alerts.length > 0 ?
-                                <div className="fixed top-[0%] h-[100vh] w-[100vw]">{alerts_render}</div>:
+                                <div className="fixed top-[0%] h-[100vh] w-[100vw] z-[100]">{alerts_render}</div>:
                                 ""
             }
         </>
