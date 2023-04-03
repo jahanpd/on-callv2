@@ -45,7 +45,7 @@ export const exportClipboard = async (
     cards: Array<Card>
 ) => {
     const output = cards.map(
-        c => `${c.urn ? c.urn.trim() : ""} ${c.name ? c.name.trim() : ""}: ${c.summary ? c.summary.trim() : ""}`
-    ).join("\n");
+        c => `${c.urn ? c.urn.trim() : ""} ${c.dob ? Math.floor((Date.now() - new Date(c.dob).getTime()) / 3.15576e+10).toString() + "yo" : ""} ${c.name ? c.name.trim() : ""}: ${c.summary ? c.summary.trim() : ""}`
+    ).join("\n\n");
     await navigator.clipboard.writeText(output);
 }

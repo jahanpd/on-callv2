@@ -35,7 +35,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext<any,
         props: {
             initialSession: session,
             user: session.user,
-            userStateServer: undefined,
+            userFilterServer: undefined,
         },
     }
 }
@@ -43,10 +43,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext<any,
 type Props = {
     initialSession: Session,
     user: User
-    userStateServer: undefined | State
+    userFilterServer: undefined | State
 }
 
-const Account = ({ initialSession, user, userStateServer }: Props) => {
+const Account = ({ initialSession, user, userFilterServer }: Props) => {
     const value = useContext(AppContext);
     const alerts = value ? value.state.alerts : [];
     const setAlerts = value ? value.setAlerts : () => {[]};
@@ -91,9 +91,9 @@ const Account = ({ initialSession, user, userStateServer }: Props) => {
     if (!userState) return Load
 
     // override userState with userStateServer if different
-    if (userStateServer) {
-        if (userStateServer != userState) {
-            void (async () => await db.state.where("id").equals(user.id).modify(userStateServer))();
+    if (userFilterServer) {
+        if (userFilterServer != userState.filterLocal) {
+            void (async () => await db.state.where("id").equals(user.id).modify(userFilterServer))();
         }
     }
 
